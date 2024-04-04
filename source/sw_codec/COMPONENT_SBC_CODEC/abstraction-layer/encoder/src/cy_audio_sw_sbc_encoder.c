@@ -674,7 +674,7 @@ cy_rslt_t cy_audio_sw_sbc_encoder_deinit(cy_audio_sw_codec_t *handle)
     audio_sw_hdl = (cy_audio_sw_codec_handle_t)(*handle);
     if(audio_sw_hdl)
     {
-        cy_asc_log_dbg("SBC encoder deinit Req ASC hdl:%p", *handle)
+        cy_asc_log_dbg("SBC encoder deinit Req ASC hdl:%p", *handle);
         if(audio_sw_hdl->audio_sw_algo_object)
         {
             cy_asc_destroy_sbc_encoder((sbc_encoder_handle_t)audio_sw_hdl->audio_sw_algo_object);

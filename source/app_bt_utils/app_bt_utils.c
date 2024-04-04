@@ -69,7 +69,7 @@
  ******************************************************************************/
 void print_bd_address( wiced_bt_device_address_t bdadr )
 {
-    printf( "\r\nBluetooth Device Address of PSoC6 is %02X:%02X:%02X:%02X:%02X:%02X \r\n", bdadr[0], bdadr[1], bdadr[2],
+    printf( " %02X:%02X:%02X:%02X:%02X:%02X \r\n", bdadr[0], bdadr[1], bdadr[2],
            bdadr[3], bdadr[4], bdadr[5] );
 }
 

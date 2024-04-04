@@ -59,4 +59,4 @@ typedef unsigned int   wiced_bool_t;
 
 #define WPRINT_BT_APP_INFO(info)   {printf info;}
 
-#endif //WICED_H
+#endif /* WICED_H */

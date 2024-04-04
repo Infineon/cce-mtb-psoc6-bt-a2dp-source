@@ -143,8 +143,8 @@ bool cy_wav_header_decode( uint32_t *n_channels,
     *i_channel_mask |= (uint8_t)wav_hdr[41] << 8;
     *i_channel_mask |= (uint8_t)wav_hdr[40];
 
-    // if(*i_channel_mask > 0x3FFFF)
-    //  return 1;
+    /* if(*i_channel_mask > 0x3FFFF)
+      return 1; */
 
     data_start[0] = wav_hdr[40 + cbSize - 2 + 0];
     data_start[1] = wav_hdr[40 + cbSize - 2 + 1];

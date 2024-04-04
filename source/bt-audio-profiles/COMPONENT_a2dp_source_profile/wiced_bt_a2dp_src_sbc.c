@@ -40,7 +40,7 @@ wiced_bool_t wiced_bt_a2dp_src_sbc_format_check( uint8_t *peer_codec_info, wiced
      * By specification all sinks must support the full set of SBC codec parameters.
      * Still it is a good idea to check the capabilities of the endpoint just to be sure.
      */
-    WICED_BTA2DP_SRC_TRACE("[%s] \n",__FUNCTION__);
+    WICED_BTA2DP_SRC_TRACE("[%s] \r\n",__FUNCTION__);
     if (default_cap == NULL)
     {
         /* copy the supported SBC codec parameters */
@@ -54,7 +54,7 @@ wiced_bool_t wiced_bt_a2dp_src_sbc_format_check( uint8_t *peer_codec_info, wiced
 
     a2d_status = wiced_bt_a2d_pars_sbc_info( &codec_info, peer_codec_info, WICED_TRUE );
 
-    WICED_BTA2DP_SRC_TRACE( "[%s]: wiced_bt_a2d_pars_sbc_info status = %d codec type: %d \n", __FUNCTION__,
+    WICED_BTA2DP_SRC_TRACE( "[%s]: wiced_bt_a2d_pars_sbc_info status = %d codec type: %d \r\n", __FUNCTION__,
                     a2d_status, peer_codec_info[2]);
 
     /* make sure the endpoint is at least SBC */
@@ -66,7 +66,7 @@ wiced_bool_t wiced_bt_a2dp_src_sbc_format_check( uint8_t *peer_codec_info, wiced
 
     if ( ret_val )
     {
-        WICED_BT_TRACE( "[%s]: ch_mode: 0x%x vs 0x%x\r\n", __FUNCTION__, temp_codec.ch_mode, codec_info.ch_mode);
+        WICED_BTA2DP_SRC_TRACE( "[%s]: ch_mode: 0x%x vs 0x%x\r\n", __FUNCTION__, temp_codec.ch_mode, codec_info.ch_mode);
         ret_val = ( temp_codec.ch_mode & codec_info.ch_mode ) ? WICED_TRUE : WICED_FALSE;
     }
 
@@ -90,6 +90,6 @@ wiced_bool_t wiced_bt_a2dp_src_sbc_format_check( uint8_t *peer_codec_info, wiced
         }
     }
 
-    WICED_BTA2DP_SRC_TRACE( "[%s]: Exit Format Match: %s\n", __FUNCTION__, ret_val ? "TRUE" : "FALSE");
+    WICED_BTA2DP_SRC_TRACE( "[%s]: Exit Format Match: %s \r\n", __FUNCTION__, ret_val ? "TRUE" : "FALSE");
     return ret_val;
 }

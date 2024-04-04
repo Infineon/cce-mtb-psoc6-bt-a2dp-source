@@ -98,8 +98,8 @@ void wiced_hal_get_pseudo_rand_number_array(uint32_t* randNumberArrayPtr, uint32
 
 
 #if defined (CYW20706A2) || defined (CYW43012C0)
-// strchr defined in ROM for most chips, define here for the missing ones
+/* strchr defined in ROM for most chips, define here for the missing ones */
 #define strchr(x,y) utl_strchr(x,y)
 char *utl_strchr(const char *s, int c);
 #endif
-#endif // __WICED_BT_UTILS_H
+#endif /* __WICED_BT_UTILS_H */

@@ -39,7 +39,7 @@ MTB_TYPE=COMBINED
 # To change the target, it is recommended to use the Library manager
 # ('make library-manager' from command line), which will also update Eclipse IDE launch
 # configurations.
-TARGET=APP_CY8CKIT-062S2-43012
+TARGET=CY8CPROTO-062S2-43439
 
 # Name of application (used to derive name of final linked file).
 #
@@ -109,13 +109,6 @@ endif
 DEFINES+=CYBSP_BT_PLATFORM_CFG_MEM_POOL_BYTES=131072
 DEFINES+=CYBSP_BT_PLATFORM_CFG_BAUD_FEATURE=3000000
 DEFINES+=CYBSP_BT_PLATFORM_CFG_BAUD_DOWNLOAD=3000000
-
-ifneq (,$(findstring APP_CY8CPROTO-062-4343W,$(TARGET)))
-DEFINES+=PSOC6_4343W_BOARD
-endif
-ifneq (,$(findstring APP_CY8CKIT-062S2-43012,$(TARGET)))
-DEFINES+=PSOC6_43012_BOARD
-endif
 
 # Select softfp or hardfp floating point. Default is softfp.
 VFP_SELECT=

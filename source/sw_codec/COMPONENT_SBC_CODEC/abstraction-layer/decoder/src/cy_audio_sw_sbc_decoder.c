@@ -1080,7 +1080,7 @@ cy_rslt_t cy_audio_sw_sbc_decoder_deinit(
     audio_sw_hdl = (cy_audio_sw_codec_handle_t)(*handle);
     if(audio_sw_hdl)
     {
-        cy_asc_log_dbg("SBC decoder deinit Req ASC hdl:%p", *handle)
+        cy_asc_log_dbg("SBC decoder deinit Req ASC hdl:%p", *handle);
         if(audio_sw_hdl->audio_sw_algo_object)
         {
             if(((sbc_decoder_handle_t)audio_sw_hdl->audio_sw_algo_object)->decoder)

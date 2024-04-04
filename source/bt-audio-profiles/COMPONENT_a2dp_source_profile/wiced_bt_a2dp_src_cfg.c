@@ -10,7 +10,6 @@
 #include <COMPONENT_profiles_include/wiced_bt_a2dp_source.h>
 #include "wiced_bt_sdp.h"
 #include "wiced_bt_a2dp_src_int.h"
-//#include "wiced_bt_audio.h"
 
 /****************************************************************************\
 * Audio definitions
@@ -86,7 +85,7 @@ wiced_bool_t wiced_bt_a2dp_source_cfg_init(wiced_bt_a2dp_codec_info_t *p_codec_i
 {
     uint8_t a2d_status = A2D_FAIL;
 
-    WICED_BTA2DP_SRC_TRACE("%s: codec_id:%d \n", __FUNCTION__, p_codec_info->codec_id);
+    WICED_BTA2DP_SRC_TRACE("%s: codec_id:%d \r\n", __FUNCTION__, p_codec_info->codec_id);
 
     switch(p_codec_info->codec_id)
     {
@@ -96,8 +95,8 @@ wiced_bool_t wiced_bt_a2dp_source_cfg_init(wiced_bt_a2dp_codec_info_t *p_codec_i
                                     (wiced_bt_a2d_sbc_cie_t *) &p_codec_info->cie.sbc,
                                     p_built_codec_info);
 
-        WICED_BTA2DP_SRC_TRACE("%s: status: %d \n", __FUNCTION__, a2d_status);
-        WICED_BTA2DP_SRC_TRACE("sbc [0x%02x;0x%02x;0x%02x;0x%02x;0x%02x;0x%02x] \n",
+        WICED_BTA2DP_SRC_TRACE("%s: status: %d \r\n", __FUNCTION__, a2d_status);
+        WICED_BTA2DP_SRC_TRACE("sbc [0x%02x;0x%02x;0x%02x;0x%02x;0x%02x;0x%02x] \r\n",
             p_built_codec_info[1], p_built_codec_info[2], p_built_codec_info[3],
             p_built_codec_info[4], p_built_codec_info[5], p_built_codec_info[6]);
 
@@ -106,7 +105,7 @@ wiced_bool_t wiced_bt_a2dp_source_cfg_init(wiced_bt_a2dp_codec_info_t *p_codec_i
     case WICED_BT_A2DP_CODEC_M12: /* MP3 */
     case WICED_BT_A2DP_CODEC_M24: /* AAC */
     case WICED_BT_A2DP_CODEC_VENDOR_SPECIFIC: /* Vendor specific */
-        // Not supported
+        /* Not supported */ 
         break;
 
     default:

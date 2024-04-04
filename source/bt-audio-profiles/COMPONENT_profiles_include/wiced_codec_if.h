@@ -42,19 +42,19 @@ typedef struct wiced_codec_data_transfer_cb wiced_codec_data_transfer_api_t;
  * NOTE: Add new codec definitions to this list.
  */
 typedef enum  {
-     WICED_CODEC_SBC = 0, //!< SBC
-     WICED_CODEC_MAX//!< CODEC_MAX
+     WICED_CODEC_SBC = 0, /* !< SBC */
+     WICED_CODEC_MAX   /* !< CODEC_MAX */
 }  wiced_codec_type_t;
 
 /**
  * Number of channels. If more, then add to this list,preferably after DUAL_CHANNEL.
  */
 typedef enum {
-    WICED_CODEC_CHANNEL_MONO = 0,    //!< MONO
-    WICED_CODEC_CHANNEL_STEREO,      //!< STEREO
-    WICED_CODEC_CHANNEL_JOINT_STEREO,//!< JOINT_STEREO
-    WICED_CODEC_CHANNEL_DUAL_CHANNEL,//!< DUAL_CHANNEL
-    WICED_CODEC_CHANNEL_MAX_CHANNELS //!< MAX_CHANNELS
+    WICED_CODEC_CHANNEL_MONO = 0,     /* !< MONO */
+    WICED_CODEC_CHANNEL_STEREO,       /* !< STEREO */
+    WICED_CODEC_CHANNEL_JOINT_STEREO, /* !< JOINT_STEREO */
+    WICED_CODEC_CHANNEL_DUAL_CHANNEL, /* !< DUAL_CHANNEL */
+    WICED_CODEC_CHANNEL_MAX_CHANNELS  /* !< MAX_CHANNELS */
 } wiced_codec_channels_t;
 
 typedef enum {
@@ -69,7 +69,7 @@ typedef enum {
 /******************************************************
  *                 Type Definitions
  ******************************************************/
-// TODO: remove codec_status, replace by result_t
+/* TODO: remove codec_status, replace by result_t */
 typedef wiced_result_t wiced_codec_status_t ;
 
 /**

@@ -10,7 +10,6 @@
 
 #include <string.h>
 #include "wiced_memory.h"
-//#include "wiced_bt_l2c.h"
 #include "wiced_bt_avdt.h"
 #include "wiced_bt_sdp.h"
 #include "wiced_bt_a2dp_src_int.h"
@@ -87,7 +86,7 @@ static void wiced_bt_a2dp_source_proc_stream_evt(uint8_t handle,
     uint16_t                      sec_len = 0;
     wiced_bt_a2dp_source_global_evt_t source_event;
 
-    WICED_BTA2DP_SRC_TRACE ("[%s] event %d handle %d \n",__FUNCTION__, event, handle);
+    WICED_BTA2DP_SRC_TRACE ("[%s] event %d handle %d \r\n",__FUNCTION__, event, handle);
 
     if (p_data)
     {
@@ -110,7 +109,7 @@ static void wiced_bt_a2dp_source_proc_stream_evt(uint8_t handle,
         if (bd_addr != NULL)
         {
             wiced_bt_a2dp_source_utils_bdcpy(p_msg->bd_addr, bd_addr);
-            WICED_BTA2DP_SRC_TRACE("bd_addr:%02x-%02x-%02x-%02x-%02x-%02x \n",
+            WICED_BTA2DP_SRC_TRACE("bd_addr:%02x-%02x-%02x-%02x-%02x-%02x \r\n",
                           bd_addr[0], bd_addr[1],
                           bd_addr[2], bd_addr[3],
                           bd_addr[4], bd_addr[5]);
@@ -118,7 +117,7 @@ static void wiced_bt_a2dp_source_proc_stream_evt(uint8_t handle,
         /* Copy config params to event message buffer */
         if (p_data != NULL)
         {
-            WICED_BTA2DP_SRC_TRACE ("[%s] error code %d %x\n",__FUNCTION__,p_data->hdr.err_code,p_data->hdr.err_code);
+            WICED_BTA2DP_SRC_TRACE ("[%s] error code %d %x \r\n",__FUNCTION__,p_data->hdr.err_code,p_data->hdr.err_code);
 
             memcpy(&p_msg->msg, p_data, sizeof (wiced_bt_avdt_ctrl_t));
 
@@ -186,7 +185,6 @@ static void wiced_bt_a2dp_source_proc_stream_evt(uint8_t handle,
         }
         else
         {
-            //source_event = (wiced_bt_a2dp_source_global_evt_t)wiced_bt_a2dp_source_stream_evt_ok[event];
             source_event = (wiced_bt_a2dp_source_global_evt_t)wiced_bt_a2dp_source_stream_evt_fail[event];
         }
 
@@ -206,7 +204,7 @@ static void wiced_bt_a2dp_source_proc_stream_evt(uint8_t handle,
     {
         wiced_bt_avdt_ctrl_t ctrl_data;
         ctrl_data.hdr.err_param = 0; /*TODO*/
-        WICED_BTA2DP_SRC_TRACE("Notifying signalling channel close (locally initiated) \n");
+        WICED_BTA2DP_SRC_TRACE("Notifying signalling channel close (locally initiated) \r\n");
         wiced_bt_a2dp_source_conn_cback(handle, bd_addr, AVDT_DISCONNECT_IND_EVT, &ctrl_data);
     }
 }
@@ -220,12 +218,11 @@ void wiced_bt_a2dp_source_ctrl_cback(uint8_t handle, wiced_bt_device_address_t b
 {
     wiced_bt_avdt_delay_rpt_t     *delay_rpt_cmd;
     wiced_bt_a2dp_source_event_data_t evt_data;
-    WICED_BTA2DP_SRC_TRACE("%s: avdt_handle: %d event=0x%x \n", __FUNCTION__, handle, event);
+    WICED_BTA2DP_SRC_TRACE("%s: avdt_handle: %d event=0x%x \r\n", __FUNCTION__, handle, event);
     wiced_bt_a2dp_source_proc_stream_evt(handle, bd_addr, event, p_data);
 
     if (event == AVDT_WRITE_CFM_EVT)
     {
-        //printf("Received WICED_BT_A2DP_SOURCE_WRITE_CFM_EVT \r\n");
         (*wiced_bt_a2dp_source_cb.control_cb)(WICED_BT_A2DP_SOURCE_WRITE_CFM_EVT,
             NULL);
     }
@@ -248,7 +245,7 @@ static void wiced_bt_a2dp_source_report_cback(uint8_t handle, AVDT_REPORT_TYPE t
                                     wiced_bt_avdt_report_data_t *p_data)
 {
     /* Will be implemented later if needed. */
-    WICED_BTA2DP_SRC_TRACE("%s: NOT IMPLEMENTED \n", __FUNCTION__);
+    WICED_BTA2DP_SRC_TRACE("%s: NOT IMPLEMENTED \r\n", __FUNCTION__);
 }
 #endif
 
@@ -267,7 +264,7 @@ void wiced_bt_a2dp_source_sdp_complete_cback(uint16_t sdp_res)
 
     memset(&msg, 0, sizeof(wiced_bt_a2dp_source_sdp_res_t));
 
-    WICED_BTA2DP_SRC_TRACE("%s status: %d \n", __FUNCTION__, sdp_res);
+    WICED_BTA2DP_SRC_TRACE("%s status: %d \r\n", __FUNCTION__, sdp_res);
 
     if (sdp_res != WICED_BT_SDP_SUCCESS)
     {
@@ -288,7 +285,7 @@ void wiced_bt_a2dp_source_sdp_complete_cback(uint16_t sdp_res)
         UUID_PROTOCOL_AVDTP, &elem) == WICED_TRUE)
     {
         avdt_version = elem.params[0];
-        WICED_BTA2DP_SRC_TRACE("%s: avdt_version: 0x%04x \n", __FUNCTION__, avdt_version);
+        WICED_BTA2DP_SRC_TRACE("%s: avdt_version: 0x%04x \r\n", __FUNCTION__, avdt_version);
         source_event = WICED_BT_A2DP_SOURCE_SDP_DISC_OK_EVT;
         msg.avdt_version = avdt_version;
     }
@@ -375,7 +372,7 @@ void wiced_bt_a2dp_source_cleanup(wiced_bt_a2dp_source_ccb_t *p_ccb,
     int                       xx;
     wiced_bt_a2dp_source_scb_t *p_scb = NULL;
 
-    WICED_BTA2DP_SRC_TRACE("%s, %d \n", __FUNCTION__, p_ccb->state );
+    WICED_BTA2DP_SRC_TRACE("%s, %d \r\n", __FUNCTION__, p_ccb->state );
 
     if( p_ccb->state != WICED_BT_A2DP_SOURCE_INIT_SST )
         return;
@@ -416,7 +413,7 @@ void wiced_bt_a2dp_source_cleanup(wiced_bt_a2dp_source_ccb_t *p_ccb,
             if(p_scb->avdt_handle)
                 wiced_bt_avdt_remove_stream(p_scb->avdt_handle);
             p_scb->avdt_handle = 0;
-            WICED_BTA2DP_SRC_TRACE("%s \n", __FUNCTION__);
+            WICED_BTA2DP_SRC_TRACE("%s \r\n", __FUNCTION__);
         }
     }
 
@@ -445,7 +442,7 @@ void wiced_bt_a2dp_source_free_sdb(wiced_bt_a2dp_source_ccb_t *p_ccb,
         wiced_bt_a2dp_source_data_t *p_data)
 {
     wiced_bt_a2dp_source_scb_t *p_scb = p_ccb->p_scb;
-    WICED_BTA2DP_SRC_TRACE("%s \n", __FUNCTION__);
+    WICED_BTA2DP_SRC_TRACE("%s \r\n", __FUNCTION__);
 
     if(p_scb->p_sdp_db != NULL)
     {
@@ -463,9 +460,9 @@ void wiced_bt_a2dp_source_reconfig_cfm(wiced_bt_a2dp_source_ccb_t *p_ccb,
 {
     wiced_bt_avdt_config_t  *reconfig_cfm = (wiced_bt_avdt_config_t *)&p_data->str_msg.msg.reconfig_cfm;
     wiced_bt_a2dp_source_config_t cap_configured;
-    WICED_BTA2DP_SRC_TRACE( "[%s]: <%x> error_code: 0x%x\n\r", __FUNCTION__, p_ccb->peer_addr, reconfig_cfm->hdr.err_code);
+    WICED_BTA2DP_SRC_TRACE( "[%s]: <%x %x %x %x %x %x> error_code: 0x%x \r\n", __FUNCTION__, p_ccb->peer_addr[0], p_ccb->peer_addr[1], p_ccb->peer_addr[2], p_ccb->peer_addr[3], p_ccb->peer_addr[4], p_ccb->peer_addr[5], reconfig_cfm->hdr.err_code);
 
-    //TEST_A2DP
+    /* TEST_A2DP */
     if (reconfig_cfm->hdr.err_code == AVDT_SUCCESS)
     {
         p_ccb->p_scb->recfg_ind = WICED_FALSE;
@@ -475,15 +472,15 @@ void wiced_bt_a2dp_source_reconfig_cfm(wiced_bt_a2dp_source_ccb_t *p_ccb,
         cap_configured.stream_mtu = p_ccb->p_scb->stream_mtu;
         (*wiced_bt_a2dp_source_cb.control_cb)(WICED_BT_A2DP_SOURCE_CONFIGURE_EVT,
                                               (wiced_bt_a2dp_source_event_data_t *)&cap_configured);
-        // Update the configuration
-       // wiced_bt_a2dp_source_set_codec_config(&p_ccb->p_scb->cap_configured,p_ccb->p_scb->avdt_handle,0);
+       /* Update the configuration */
+       /* wiced_bt_a2dp_source_set_codec_config(&p_ccb->p_scb->cap_configured,p_ccb->p_scb->avdt_handle,0); */
 
         /* Reconfig was successful. restart */
         wiced_bt_avdt_start_req(&p_ccb->p_scb->avdt_handle, 1);
     }
     else
     {
-        // Reconfig failed. Try closing and re-starting
+        /* Reconfig failed. Try closing and re-starting */
         wiced_bt_a2dp_source_close_str(p_ccb,NULL);
     }
 }
@@ -495,7 +492,7 @@ void wiced_bt_a2dp_source_reconfig_cfm(wiced_bt_a2dp_source_ccb_t *p_ccb,
 void wiced_bt_a2dp_source_disconnect_req(wiced_bt_a2dp_source_ccb_t *p_ccb,
         wiced_bt_a2dp_source_data_t *p_data)
 {
-    WICED_BTA2DP_SRC_TRACE("%s \n", __FUNCTION__);
+    WICED_BTA2DP_SRC_TRACE("%s \r\n", __FUNCTION__);
     wiced_bt_avdt_disconnect_req(p_ccb->peer_addr, p_ccb->p_dt_cback);
 }
 
@@ -506,7 +503,7 @@ void wiced_bt_a2dp_source_disconnect_req(wiced_bt_a2dp_source_ccb_t *p_ccb,
 void wiced_bt_a2dp_source_sig_opened(wiced_bt_a2dp_source_ccb_t *p_ccb,
         wiced_bt_a2dp_source_data_t *p_data)
 {
-    WICED_BTA2DP_SRC_TRACE("%s ccb avdt_handle = %d \n", __FUNCTION__, p_data->str_msg.handle);
+    WICED_BTA2DP_SRC_TRACE("%s ccb avdt_handle = %d \r\n", __FUNCTION__, p_data->str_msg.handle);
 
     if (p_ccb->p_scb->is_accepter)
         p_ccb->p_scb->avdt_version = p_data->sdp_res.avdt_version;
@@ -527,7 +524,7 @@ void wiced_bt_a2dp_source_sig_closed(wiced_bt_a2dp_source_ccb_t *p_ccb,
 {
     wiced_bt_a2dp_source_status_t disconnect;
 
-    WICED_BTA2DP_SRC_TRACE("%s \n", __FUNCTION__);
+    WICED_BTA2DP_SRC_TRACE("%s \r\n", __FUNCTION__);
 
     /* Send callback event to the upper layer to inform streaming channel is closed */
     wiced_bt_a2dp_source_utils_bdcpy(disconnect.bd_addr, p_ccb->peer_addr);
@@ -559,7 +556,7 @@ void wiced_bt_a2dp_source_sig_open_fail(wiced_bt_a2dp_source_ccb_t *p_ccb,
 {
     wiced_bt_a2dp_source_status_t connect;
 
-    WICED_BTA2DP_SRC_TRACE("%s \n", __FUNCTION__);
+    WICED_BTA2DP_SRC_TRACE("%s \r\n", __FUNCTION__);
 
     wiced_bt_a2dp_source_utils_bdcpy(connect.bd_addr, p_ccb->peer_addr);
     connect.result = WICED_BT_ERROR;
@@ -582,14 +579,14 @@ void wiced_bt_a2dp_source_str_opened(wiced_bt_a2dp_source_ccb_t *p_ccb,
 {
     wiced_bt_a2dp_source_scb_t   *p_scb = p_ccb->p_scb;
     wiced_bt_a2dp_source_status_t connect;
-    //wiced_bt_avdt_ctrl_t ctrl_data;
+    /* wiced_bt_avdt_ctrl_t ctrl_data; */
     wiced_bt_a2dp_source_config_t cap_configured;
 
     p_scb->avdt_handle = p_data->str_msg.handle;
     p_scb->l2c_cid = wiced_bt_avdt_get_l2cap_channel(p_scb->avdt_handle);
     p_scb->stream_mtu = p_data->str_msg.msg.open_ind.peer_mtu - AVDT_MEDIA_HDR_SIZE;
 
-    WICED_BTA2DP_SRC_TRACE("%s: l2c_cid:%d mtu:%d \n", __FUNCTION__, p_scb->l2c_cid, p_scb->stream_mtu);
+    WICED_BTA2DP_SRC_TRACE("%s: l2c_cid:%d mtu:%d \r\n", __FUNCTION__, p_scb->l2c_cid, p_scb->stream_mtu);
 
     p_scb->l2c_bufs = 0;
 
@@ -602,7 +599,7 @@ void wiced_bt_a2dp_source_str_opened(wiced_bt_a2dp_source_ccb_t *p_ccb,
     cap_configured.stream_mtu = p_scb->stream_mtu;
     (*wiced_bt_a2dp_source_cb.control_cb)(WICED_BT_A2DP_SOURCE_CONFIGURE_EVT,
                                           (wiced_bt_a2dp_source_event_data_t *)&cap_configured);
-    //wiced_bt_a2dp_source_set_codec_config(&p_ccb->p_scb->cap_configured,p_ccb->p_scb->avdt_handle,0);
+    /* wiced_bt_a2dp_source_set_codec_config(&p_ccb->p_scb->cap_configured,p_ccb->p_scb->avdt_handle,0); */
 
     /* TODO check if other audio channel is open.
      * If yes, check if reconfig is needed
@@ -619,7 +616,7 @@ void wiced_bt_a2dp_source_str_opened(wiced_bt_a2dp_source_ccb_t *p_ccb,
     connect.lcid = p_data->str_msg.msg.open_cfm.lcid;
     connect.is_accepter = p_scb->is_accepter;
 
-    //ctrl_data.hdr.err_param = 0; /*TODO*/
+    /* ctrl_data.hdr.err_param = 0; */ /*TODO*/
 
    /*A2DP TEST Why do we need reconnect here ? */
         (*wiced_bt_a2dp_source_cb.control_cb)(WICED_BT_A2DP_SOURCE_CONNECT_EVT,
@@ -643,9 +640,9 @@ void wiced_bt_a2dp_source_str_open_fail(wiced_bt_a2dp_source_ccb_t *p_ccb,
     wiced_bt_a2dp_source_scb_t    *p_scb = p_ccb->p_scb;
     wiced_bt_a2dp_source_status_t  connect;
 
-    WICED_BTA2DP_SRC_TRACE("%s \n", __FUNCTION__);
+    WICED_BTA2DP_SRC_TRACE("%s \r\n", __FUNCTION__);
 
-    // make sure we are updating reconfig flag
+    /* make sure we are updating reconfig flag */
     p_scb->recfg_ind = WICED_FALSE;
 
     wiced_bt_a2dp_source_utils_bdcpy(connect.bd_addr, p_scb->peer_addr);
@@ -666,7 +663,7 @@ void wiced_bt_a2dp_source_do_close(wiced_bt_a2dp_source_ccb_t *p_ccb,
 {
     wiced_bt_a2dp_source_scb_t *p_scb = p_ccb->p_scb;
 
-    WICED_BTA2DP_SRC_TRACE("%s \n", __FUNCTION__);
+    WICED_BTA2DP_SRC_TRACE("%s \r\n", __FUNCTION__);
 
     /* stop stream if started */
     if (p_scb->co_started)
@@ -692,7 +689,7 @@ void wiced_bt_a2dp_source_close_str(wiced_bt_a2dp_source_ccb_t *p_ccb,
 {
     wiced_bt_a2dp_source_scb_t *p_scb = p_ccb->p_scb;
 
-    WICED_BTA2DP_SRC_TRACE("%s \n", __FUNCTION__);
+    WICED_BTA2DP_SRC_TRACE("%s \r\n", __FUNCTION__);
 
     /* stop stream if started */
     if (p_scb->co_started)
@@ -714,7 +711,7 @@ void wiced_bt_a2dp_source_connect_req(wiced_bt_a2dp_source_ccb_t *p_ccb,
 {
     wiced_bt_a2dp_source_scb_t *p_scb = p_ccb->p_scb;
 
-    WICED_BTA2DP_SRC_TRACE("%s \n", __FUNCTION__);
+    WICED_BTA2DP_SRC_TRACE("%s \r\n", __FUNCTION__);
 
     p_scb->avdt_version = p_data->sdp_res.avdt_version;
     wiced_bt_a2dp_source_free_sdb(p_ccb, p_data);
@@ -731,13 +728,13 @@ void wiced_bt_a2dp_source_sdp_failed(wiced_bt_a2dp_source_ccb_t *p_ccb,
 {
     wiced_bt_a2dp_source_status_t connect;
 
-    WICED_BTA2DP_SRC_TRACE("%s \n", __FUNCTION__);
+    WICED_BTA2DP_SRC_TRACE("%s \r\n", __FUNCTION__);
     wiced_bt_a2dp_source_free_sdb(p_ccb, p_data);
 
     if (p_ccb->p_scb->is_accepter)
     {
-        // In accepter role, SDP was trigger just to get peer A2DP version.
-        // As SDP is failed, we will assume peer A2DP version is 1.0
+        /* In accepter role, SDP was trigger just to get peer A2DP version.
+           As SDP is failed, we will assume peer A2DP version is 1.0 */
         p_ccb->p_scb->avdt_version = 0x100;
         memset(&p_ccb->p_scb->cap_configured,0,sizeof(p_ccb->p_scb->cap_configured));
         wiced_bt_a2dp_source_discover_req(p_ccb);
@@ -762,7 +759,7 @@ void wiced_bt_a2dp_source_sdp_failed(wiced_bt_a2dp_source_ccb_t *p_ccb,
 void wiced_bt_a2dp_source_rej_conn(wiced_bt_a2dp_source_ccb_t *p_ccb,
         wiced_bt_a2dp_source_data_t *p_data)
 {
-    WICED_BTA2DP_SRC_TRACE("%s \n", __FUNCTION__);
+    WICED_BTA2DP_SRC_TRACE("%s \r\n", __FUNCTION__);
     wiced_bt_avdt_config_rsp(p_data->str_msg.handle, p_data->str_msg.msg.hdr.label,
         AVDT_ERR_BAD_STATE, 0);
 }
@@ -774,7 +771,7 @@ void wiced_bt_a2dp_source_rej_conn(wiced_bt_a2dp_source_ccb_t *p_ccb,
 void wiced_bt_a2dp_source_open_failed(wiced_bt_a2dp_source_ccb_t *p_ccb,
         wiced_bt_a2dp_source_data_t *p_data)
 {
-    WICED_BTA2DP_SRC_TRACE("%s \n", __FUNCTION__);
+    WICED_BTA2DP_SRC_TRACE("%s \r\n", __FUNCTION__);
     wiced_bt_a2dp_source_cb.p_scb->open_status = WICED_BT_ERROR;
     wiced_bt_avdt_disconnect_req(p_ccb->peer_addr, p_ccb->p_dt_cback);
 }
@@ -787,7 +784,7 @@ void wiced_bt_a2dp_source_open_failed(wiced_bt_a2dp_source_ccb_t *p_ccb,
 void wiced_bt_a2dp_source_sig_hdl_ap_close(wiced_bt_a2dp_source_ccb_t *p_ccb,
         wiced_bt_a2dp_source_data_t *p_data)
 {
-    WICED_BTA2DP_SRC_TRACE("%s \n", __FUNCTION__);
+    WICED_BTA2DP_SRC_TRACE("%s \r\n", __FUNCTION__);
 }
 
 /*******************************************************************************
@@ -799,7 +796,7 @@ void wiced_bt_a2dp_source_do_start(wiced_bt_a2dp_source_ccb_t *p_ccb,
 {
     wiced_bt_a2dp_source_scb_t *p_scb = p_ccb->p_scb;
 
-    WICED_BTA2DP_SRC_TRACE("%s started %d \n", __FUNCTION__, p_scb->started);
+    WICED_BTA2DP_SRC_TRACE("%s started %d \r\n", __FUNCTION__, p_scb->started);
 
     if (p_scb->started == WICED_FALSE)
     {
@@ -807,15 +804,15 @@ void wiced_bt_a2dp_source_do_start(wiced_bt_a2dp_source_ccb_t *p_ccb,
 
         if (memcmp(&p_ccb->p_scb->cap_configured, &p_data->start_req.codec_params, sizeof(wiced_bt_a2dp_codec_info_t)))
         {
-            // if not same, mean reconfig required
+            /* if not same, mean reconfig required */
             p_scb->recfg_ind = WICED_TRUE;
 
-            // Clear SEP record as we will configure it again
+            /* Clear SEP record as we will configure it again */
             wiced_bt_a2dp_source_clean_sep_record(p_scb->avdt_handle);
 
             memcpy(&wiced_bt_a2dp_source_cb.p_config_data->default_codec_config, &p_data->start_req.codec_params,sizeof(wiced_bt_a2dp_codec_info_t));
 
-            // Send reconfigure command
+            /* Send reconfigure command */
             WICED_BTA2DP_SRC_TRACE("Sending reconfigure command !! \r\n");
             wiced_bt_a2dp_source_ssm_execute(p_ccb, NULL, WICED_BT_A2DP_SOURCE_API_RECONFIG_CMD_EVT);
         }
@@ -850,12 +847,12 @@ void wiced_bt_a2dp_source_send_start_resp( wiced_bt_a2dp_source_ccb_t *p_ccb,
         if(p_scb->role & WICED_BT_A2DP_SOURCE_ROLE_START_INT)
             p_scb->role &= ~WICED_BT_A2DP_SOURCE_ROLE_START_INT;
 
-        WICED_BTA2DP_SRC_TRACE("%s \n", __FUNCTION__);
+        WICED_BTA2DP_SRC_TRACE("%s \r\n", __FUNCTION__);
 
         wiced_bt_a2dp_source_stream_chg(p_scb, WICED_TRUE);
         p_scb->co_started = WICED_TRUE;
 
-       // result = wiced_bt_a2dp_source_streaming_configure_route( p_scb->avdt_handle );
+       /* result = wiced_bt_a2dp_source_streaming_configure_route( p_scb->avdt_handle ); */
 
         if ( result == WICED_SUCCESS )
             wiced_bt_avdt_start_resp( p_scb->avdt_handle, p_data->api_data.label, p_data->api_data.status );
@@ -878,7 +875,7 @@ void wiced_bt_a2dp_source_str_stopped(wiced_bt_a2dp_source_ccb_t *p_ccb,
     wiced_bt_a2dp_source_scb_t   *p_scb = p_ccb->p_scb;
     wiced_bt_a2dp_source_status_t suspend;
 
-    WICED_BTA2DP_SRC_TRACE("%s \n", __FUNCTION__);
+    WICED_BTA2DP_SRC_TRACE("%s \r\n", __FUNCTION__);
     wiced_bt_a2dp_source_utils_bdcpy(suspend.bd_addr, p_scb->peer_addr);
     suspend.handle = p_scb->avdt_handle;
     suspend.is_accepter   = p_scb->is_accepter;
@@ -888,7 +885,7 @@ void wiced_bt_a2dp_source_str_stopped(wiced_bt_a2dp_source_ccb_t *p_ccb,
 
     if (p_data)
     {
-        WICED_BTA2DP_SRC_TRACE("suspending: %d, sup:%d \n", p_scb->started, p_scb->suspend_sup);
+        WICED_BTA2DP_SRC_TRACE("suspending: %d, sup:%d \r\n", p_scb->started, p_scb->suspend_sup);
         if ((p_scb->started)  && (p_scb->suspend_sup))
         {
             p_scb->l2c_bufs = 0;
@@ -908,7 +905,7 @@ void wiced_bt_a2dp_source_str_stopped(wiced_bt_a2dp_source_ccb_t *p_ccb,
             {
                 suspend.result = WICED_SUCCESS;
 
-                //suspend.result = wiced_bt_a2dp_source_streaming_stop(p_scb->avdt_handle);
+                /* suspend.result = wiced_bt_a2dp_source_streaming_stop(p_scb->avdt_handle); */
 
                 (*wiced_bt_a2dp_source_cb.control_cb)(WICED_BT_A2DP_SOURCE_SUSPEND_EVT,
                     (wiced_bt_a2dp_source_event_data_t*) &suspend);
@@ -925,7 +922,7 @@ void wiced_bt_a2dp_source_str_stopped(wiced_bt_a2dp_source_ccb_t *p_ccb,
              */
             p_scb->co_started = WICED_FALSE;
 
-            //wiced_bt_a2dp_source_streaming_stop(p_scb->avdt_handle);
+            /* wiced_bt_a2dp_source_streaming_stop(p_scb->avdt_handle); */
 
             (*wiced_bt_a2dp_source_cb.control_cb)(WICED_BT_A2DP_SOURCE_SUSPEND_EVT,
                 (wiced_bt_a2dp_source_event_data_t*) &suspend);
@@ -946,7 +943,7 @@ void wiced_bt_a2dp_source_start_ind(wiced_bt_a2dp_source_ccb_t *p_ccb,
     wiced_bt_a2dp_source_scb_t   *p_scb = p_ccb->p_scb;
 
     /* AVDT_START_IND_EVT - start audio */
-    WICED_BTA2DP_SRC_TRACE( "[%s]: handle: %d, lcid %d \n", __FUNCTION__, p_ccb->avdt_handle, p_ccb->p_scb->l2c_cid );
+    WICED_BTA2DP_SRC_TRACE( "[%s]: handle: %d, lcid %d \r\n", __FUNCTION__, p_ccb->avdt_handle, p_ccb->p_scb->l2c_cid );
 
     start.result = p_data->str_msg.msg.hdr.err_code;
     start.handle = p_scb->avdt_handle;
@@ -971,7 +968,7 @@ void wiced_bt_a2dp_source_start_ok(wiced_bt_a2dp_source_ccb_t *p_ccb,
     if(p_scb->role & WICED_BT_A2DP_SOURCE_ROLE_START_INT)
         p_scb->role &= ~WICED_BT_A2DP_SOURCE_ROLE_START_INT;
 
-    WICED_BTA2DP_SRC_TRACE("%s \n", __FUNCTION__);
+    WICED_BTA2DP_SRC_TRACE("%s \r\n", __FUNCTION__);
 
     wiced_bt_a2dp_source_stream_chg(p_scb, WICED_TRUE);
     p_scb->co_started = WICED_TRUE;
@@ -984,7 +981,7 @@ void wiced_bt_a2dp_source_start_ok(wiced_bt_a2dp_source_ccb_t *p_ccb,
     (*wiced_bt_a2dp_source_cb.control_cb)(WICED_BT_A2DP_SOURCE_START_CFM_EVT,
         (wiced_bt_a2dp_source_event_data_t *) &start);
 
-     //wiced_bt_a2dp_source_streaming_configure_route(p_scb->avdt_handle);
+     /* wiced_bt_a2dp_source_streaming_configure_route(p_scb->avdt_handle); */
 }
 
 /*******************************************************************************
@@ -997,7 +994,7 @@ void wiced_bt_a2dp_source_start_failed(wiced_bt_a2dp_source_ccb_t *p_ccb,
     wiced_bt_a2dp_source_scb_t   *p_scb = p_ccb->p_scb;
     wiced_bt_a2dp_source_status_t start;
 
-    WICED_BTA2DP_SRC_TRACE("%s \n", __FUNCTION__);
+    WICED_BTA2DP_SRC_TRACE("%s \r\n", __FUNCTION__);
 
     if(p_scb->started == WICED_FALSE && p_scb->co_started == WICED_FALSE)
     {
@@ -1006,7 +1003,7 @@ void wiced_bt_a2dp_source_start_failed(wiced_bt_a2dp_source_ccb_t *p_ccb,
         start.is_accepter   = p_scb->is_accepter;
         wiced_bt_a2dp_source_utils_bdcpy(start.bd_addr, p_scb->peer_addr);
 
-        //wiced_bt_a2dp_source_streaming_stop(p_scb->avdt_handle);
+        /* wiced_bt_a2dp_source_streaming_stop(p_scb->avdt_handle); */
 
         (*wiced_bt_a2dp_source_cb.control_cb)(WICED_BT_A2DP_SOURCE_START_CFM_EVT,
             (wiced_bt_a2dp_source_event_data_t *) &start);
@@ -1024,7 +1021,7 @@ void wiced_bt_a2dp_source_suspend_cfm(wiced_bt_a2dp_source_ccb_t *p_ccb,
     wiced_bt_a2dp_source_status_t suspend;
     uint8_t                     err_code = p_data->str_msg.msg.hdr.err_code;
 
-    WICED_BTA2DP_SRC_TRACE("%s \n", __FUNCTION__);
+    WICED_BTA2DP_SRC_TRACE("%s \r\n", __FUNCTION__);
 
     wiced_bt_a2dp_source_utils_bdcpy(suspend.bd_addr, p_data->str_msg.bd_addr);
     suspend.result = WICED_SUCCESS;
@@ -1055,7 +1052,7 @@ void wiced_bt_a2dp_source_suspend_cfm(wiced_bt_a2dp_source_ccb_t *p_ccb,
         }
     }
 
-    // suspend.result = wiced_bt_a2dp_source_streaming_stop(p_scb->avdt_handle);
+    /* suspend.result = wiced_bt_a2dp_source_streaming_stop(p_scb->avdt_handle); */
 
     (*wiced_bt_a2dp_source_cb.control_cb)(WICED_BT_A2DP_SOURCE_SUSPEND_EVT,
         (wiced_bt_a2dp_source_event_data_t*) &suspend);
@@ -1069,7 +1066,7 @@ void wiced_bt_a2dp_source_suspend_cfm(wiced_bt_a2dp_source_ccb_t *p_ccb,
 *******************************************************************************/
 void wiced_bt_a2dp_source_stream_chg(wiced_bt_a2dp_source_scb_t *p_scb, wiced_bool_t started)
 {
-    WICED_BTA2DP_SRC_TRACE("%s: started:%d \n", __FUNCTION__, started);
+    WICED_BTA2DP_SRC_TRACE("%s: started:%d \r\n", __FUNCTION__, started);
 
 /* TODO - Set stream priority */
 #if 0
@@ -1097,7 +1094,7 @@ void wiced_bt_a2dp_source_hdl_str_close_ind(wiced_bt_a2dp_source_ccb_t *p_ccb,
         wiced_bt_a2dp_source_data_t *p_data)
 {
     wiced_bt_a2dp_source_scb_t   *p_scb = p_ccb->p_scb;
-    WICED_BTA2DP_SRC_TRACE("%s \n", __FUNCTION__);
+    WICED_BTA2DP_SRC_TRACE("%s \r\n", __FUNCTION__);
 
     /* Do stop if we were started */
     if (p_scb->co_started)
@@ -1125,7 +1122,7 @@ void wiced_bt_a2dp_source_hdl_str_close_cfm(wiced_bt_a2dp_source_ccb_t *p_ccb,
         wiced_bt_a2dp_source_data_t *p_data)
 {
 
-    WICED_BTA2DP_SRC_TRACE( "[%s]: <%B> error_code: %d\n\r", __FUNCTION__, p_ccb->peer_addr, p_data->str_msg.msg.close_cfm.err_code);
+    WICED_BTA2DP_SRC_TRACE( "[%s]: <%x %x %x %x %x %x> error_code: %d \r\n", __FUNCTION__, p_ccb->peer_addr[0], p_ccb->peer_addr[1], p_ccb->peer_addr[2], p_ccb->peer_addr[3], p_ccb->peer_addr[4], p_ccb->peer_addr[5], p_data->str_msg.msg.close_cfm.err_code);
 
     if (p_ccb->p_scb->recfg_ind == WICED_TRUE)
     {
@@ -1185,7 +1182,7 @@ void wiced_bt_a2dp_source_sig_str_hdl_getcap_cfm(wiced_bt_a2dp_source_ccb_t *p_c
 
             uint8_t seid = p_ccb->p_scb->sep_info[p_ccb->p_scb->sep_info_idx].seid;
 
-            WICED_BTA2DP_SRC_TRACE( "[%s]: Saving SEID %d information for codec id: %d \n",
+            WICED_BTA2DP_SRC_TRACE( "[%s]: Saving SEID %d information for codec id: %d \r\n",
                             __FUNCTION__, seid, A2D_MEDIA_CT_SBC);
 
             p_ccb->p_scb->av_sep_info[i].seid = seid;
@@ -1199,7 +1196,7 @@ void wiced_bt_a2dp_source_sig_str_hdl_getcap_cfm(wiced_bt_a2dp_source_ccb_t *p_c
         }
         else
         {
-            WICED_BTA2DP_SRC_TRACE( "[%s]: Codec not saved \n", __FUNCTION__);
+            WICED_BTA2DP_SRC_TRACE( "[%s]: Codec not saved \r\n", __FUNCTION__);
         }
     }
 
@@ -1250,7 +1247,7 @@ wiced_bool_t wiced_bt_a2dp_source_next_gatcap(wiced_bt_a2dp_source_ccb_t *p_ccb,
     wiced_bool_t last_getcap = WICED_FALSE;
     uint8_t i;
 
-    WICED_BTA2DP_SRC_TRACE( "[%s]: sep_info_idx = %d\n\r", __FUNCTION__, p_ccb->p_scb->sep_info_idx);
+    WICED_BTA2DP_SRC_TRACE( "[%s]: sep_info_idx = %d \r\n", __FUNCTION__, p_ccb->p_scb->sep_info_idx);
 
     /* walk the discovery results looking for the next audio sink. */
     for ( i = p_ccb->p_scb->sep_info_idx; i < p_ccb->p_scb->num_seps; i++)
@@ -1309,8 +1306,8 @@ void wiced_bt_a2dp_source_sig_str_hdl_discovery_cfm (wiced_bt_a2dp_source_ccb_t 
 
     if (p_discover->hdr.err_code != AVDT_SUCCESS)
     {
-        //wiced_bt_avdt_disconnect_req(p_ccb->peer_addr, p_ccb->p_dt_cback);
-          WICED_BTA2DP_SRC_TRACE( "[%s]: Error code: = %d \n", __FUNCTION__, p_discover->hdr.err_code );
+        /* wiced_bt_avdt_disconnect_req(p_ccb->peer_addr, p_ccb->p_dt_cback); */
+          WICED_BTA2DP_SRC_TRACE( "[%s]: Error code: = %d \r\n", __FUNCTION__, p_discover->hdr.err_code );
         return;
     }
 
@@ -1321,7 +1318,7 @@ void wiced_bt_a2dp_source_sig_str_hdl_discovery_cfm (wiced_bt_a2dp_source_ccb_t 
     p_ccb->p_scb->num_seps = p_discover->num_seps;
 
     /* trace all discovered SEPs */
-    WICED_BTA2DP_SRC_TRACE( "[%s]: Peer Num SEPs: = %d \n", __FUNCTION__, p_discover->num_seps );
+    WICED_BTA2DP_SRC_TRACE( "[%s]: Peer Num SEPs: = %d \r\n", __FUNCTION__, p_discover->num_seps );
 
     /* save the pointer to the SEP information from the discover */
     if (p_ccb->p_scb->sep_info != NULL)
@@ -1341,7 +1338,7 @@ void wiced_bt_a2dp_source_sig_str_hdl_discovery_cfm (wiced_bt_a2dp_source_ccb_t 
         }
     }
 
-    WICED_BTA2DP_SRC_TRACE( "[%s]: sink_cnt: = %d \n", __FUNCTION__, sink_cnt );
+    WICED_BTA2DP_SRC_TRACE( "[%s]: sink_cnt: = %d \r\n", __FUNCTION__, sink_cnt );
 
     if (sink_cnt != 0)
     {
@@ -1376,7 +1373,7 @@ void wiced_bt_a2dp_source_sig_str_hdl_setconfig (wiced_bt_a2dp_source_ccb_t *p_c
     uint8_t sep_index = p_data->str_msg.msg.config_ind.int_seid - 1;
     uint8_t codec_index = wiced_bt_a2dp_source_cb.seps[sep_index].codec_cap_index;
 
-    WICED_BTA2DP_SRC_TRACE("[%s] seid: %d error code %d \n", __FUNCTION__, p_data->str_msg.msg.config_ind.int_seid, p_data->str_msg.msg.config_ind.hdr.err_code);
+    WICED_BTA2DP_SRC_TRACE("[%s] seid: %d error code %d \r\n", __FUNCTION__, p_data->str_msg.msg.config_ind.int_seid, p_data->str_msg.msg.config_ind.hdr.err_code);
 
     if (AVDT_SUCCESS != p_data->str_msg.msg.config_ind.hdr.err_code)
         return;
@@ -1396,7 +1393,7 @@ void wiced_bt_a2dp_source_sig_str_hdl_setconfig (wiced_bt_a2dp_source_ccb_t *p_c
     }
     else
     {
-        WICED_BTA2DP_SRC_ERROR (" [%s] Error %d in sending avdt config response \n", __FUNCTION__, result);
+        WICED_BTA2DP_SRC_ERROR (" [%s] Error %d in sending avdt config response \r\n", __FUNCTION__, result);
     }
 }
 
@@ -1421,7 +1418,7 @@ void wiced_bt_a2dp_source_sig_hdl_set_re_config (wiced_bt_a2dp_source_ccb_t *p_c
 {
     int i,j,result;
     wiced_bool_t found = WICED_FALSE;
-   // wiced_bt_a2d_sbc_cie_t codec_info;
+   /* wiced_bt_a2d_sbc_cie_t codec_info; */
     wiced_bt_avdt_cfg_t *peercaps= NULL;
 
     /* determine if one of the sink found will match our format */
@@ -1438,7 +1435,7 @@ void wiced_bt_a2dp_source_sig_hdl_set_re_config (wiced_bt_a2dp_source_ccb_t *p_c
             if (peercaps != NULL)
             {
                 /* we will use the first SBC SEP that we find. */
-                WICED_BTA2DP_SRC_TRACE("[%s] check sep: %d seid: %d\n", __FUNCTION__, i, p_ccb->p_scb->sep_info[i].seid);
+                WICED_BTA2DP_SRC_TRACE("[%s] check sep: %d seid: %d \r\n", __FUNCTION__, i, p_ccb->p_scb->sep_info[i].seid);
 
                 for( j = 0; j < wiced_bt_a2dp_source_cb.p_config_data->codec_capabilities.count; j++)
                 {
@@ -1462,7 +1459,7 @@ void wiced_bt_a2dp_source_sig_hdl_set_re_config (wiced_bt_a2dp_source_ccb_t *p_c
                             case WICED_BT_A2DP_CODEC_M12:
                             case WICED_BT_A2DP_CODEC_M24:
                             case WICED_BT_A2DP_CODEC_VENDOR_SPECIFIC:
-                                //Not Supported
+                                /* Not Supported */
                                 break;
                         }
                     }
@@ -1472,7 +1469,7 @@ void wiced_bt_a2dp_source_sig_hdl_set_re_config (wiced_bt_a2dp_source_ccb_t *p_c
             }
             else
             {
-                WICED_BTA2DP_SRC_TRACE("\t\t peercaps not found for seid %d!\n", p_ccb->p_scb->sep_info[i].seid);
+                WICED_BTA2DP_SRC_TRACE("\t\t peercaps not found for seid %d! \r\n", p_ccb->p_scb->sep_info[i].seid);
             }
         }
     }
@@ -1481,7 +1478,7 @@ void wiced_bt_a2dp_source_sig_hdl_set_re_config (wiced_bt_a2dp_source_ccb_t *p_c
     {
         wiced_bt_avdt_cfg_t av_cfg;
 
-        WICED_BTA2DP_SRC_TRACE( "[%s]: found SBC SEP on peer seid: %d... \n", __FUNCTION__, p_ccb->p_scb->sep_info[i].seid );
+        WICED_BTA2DP_SRC_TRACE( "[%s]: found SBC SEP on peer seid: %d... \r\n", __FUNCTION__, p_ccb->p_scb->sep_info[i].seid );
 
         /* Build the configuration used to open the AVDT/A2DP connection */
 
@@ -1505,7 +1502,7 @@ void wiced_bt_a2dp_source_sig_hdl_set_re_config (wiced_bt_a2dp_source_ccb_t *p_c
             if (result != AVDT_SUCCESS)
             {
                 p_ccb->p_scb->recfg_ind = WICED_FALSE;
-                WICED_BTA2DP_SRC_ERROR ( "[%s] wiced_bt_avdt_reconfig_req response %d \n",__FUNCTION__, result);
+                WICED_BTA2DP_SRC_ERROR ( "[%s] wiced_bt_avdt_reconfig_req response %d \r\n",__FUNCTION__, result);
             }
         }
         else
@@ -1543,7 +1540,7 @@ void wiced_bt_a2dp_source_discover_req(wiced_bt_a2dp_source_ccb_t *p_ccb)
     {
         if( AVDT_SUCCESS != wiced_bt_avdt_discover_req( p_ccb->peer_addr, p_sep_info, WICED_BT_A2DP_SOURCE_NUM_SEPS, p_ccb->p_dt_cback ))
         {
-            WICED_BTA2DP_SRC_TRACE ("[%s] Failed \n",__FUNCTION__);
+            WICED_BTA2DP_SRC_TRACE ("[%s] Failed \r\n",__FUNCTION__);
             wiced_bt_free_buffer(p_sep_info);
         }
     }
@@ -1556,9 +1553,9 @@ void wiced_bt_a2dp_source_sig_closed_cleanup(wiced_bt_a2dp_source_ccb_t *p_ccb,
         wiced_bt_a2dp_source_data_t *p_data)
 {
 
-    WICED_BTA2DP_SRC_TRACE("%s\n", __FUNCTION__);
+    WICED_BTA2DP_SRC_TRACE("%s \r\n", __FUNCTION__);
 
-    //wiced_bt_a2dp_source_stream_close(p_scb->avdt_handle);
+    /* wiced_bt_a2dp_source_stream_close(p_scb->avdt_handle); */
 
     wiced_bt_a2dp_source_sig_closed(p_ccb, p_data);
     wiced_bt_a2dp_source_cleanup(p_ccb, p_data);

@@ -4,14 +4,10 @@ Disclaimer: This is a community code example (CCE) released for the benefit of t
 
 This community code example (CCE) demonstrates streaming 48KHz, Stereo Audio with Bluetooth® classic Advanced Audio Distribution Profile (A2DP). The A2DP source profile is demonstrated in this CCE. The PSoC&trade; 6 is the A2DP source and external Bluetooth® speaker/earbuds is the A2DP sink.
 
-[View this README on GitHub.]()
-
-[Provide feedback on this code example.]()
-
 ## Requirements
 
-- [ModusToolbox&trade; software](https://www.infineon.com/modustoolbox) v3.0 or later (tested with v3.0)
-- Board support package (BSP) minimum required version: 4.0.0 or later (tested with 4.1.0)
+- [ModusToolbox&trade; software](https://www.infineon.com/modustoolbox) v3.1 or later (tested with v3.1)
+- Board support package (BSP) minimum required version: 4.0.0 or later (tested with 4.2.0)
 - Programming language: C
 - Associated parts: All [PSoC™ 6 MCU](https://www.infineon.com/cms/en/product/microcontroller/32-bit-psoc-arm-cortex-microcontroller/psoc-6-32-bit-arm-cortex-m4-mcu/) with [AIROC™ CYW43xxx Wi-Fi & Bluetooth® combo chips](https://www.infineon.com/cms/en/product/wireless-connectivity/airoc-wi-fi-plus-bluetooth-combos/)
 
@@ -21,12 +17,15 @@ This community code example (CCE) demonstrates streaming 48KHz, Stereo Audio wit
 
 ## Supported kits (make variable 'TARGET')
 
-- [PSoC&trade; 62S2 Bluetooth&reg; pioneer kit](https://www.infineon.com/cms/en/product/evaluation-boards/cy8ckit-062s2-43012/) (`CY8CKIT-062S2-43012`)
-- [PSoC™ 6 Wi-Fi Bluetooth® prototyping kit](https://www.infineon.com/CY8CPROTO-062-4343W) (`CY8CPROTO-062-4343W`)
+- [PSoC&trade; 62S2 Wi-Fi Bluetooth&reg; Prototyping Kit](https://www.infineon.com/CY8CPROTO-062S2-43439) (`CY8CPROTO-062S2-43439`) – Default value of `TARGET`
+- [PSoC&trade; 6 Wi-Fi Bluetooth&reg; Prototyping Kit](https://www.infineon.com/CY8CPROTO-062-4343W) (`CY8CPROTO-062-4343W`)
+- [PSoC&trade; 62S2 Wi-Fi Bluetooth&reg; Pioneer Kit](https://www.infineon.com/CY8CKIT-062S2-43012) (`CY8CKIT-062S2-43012`)
 
 ## Hardware setup
 
 This example requires an External Bluetooth® (A2DP) Speaker/earbuds. Power on the speaker/earbuds and keep it ready to be connected from PSoC™ 6 kit.
+
+This application is tested with Bluetooth v5.0 audio devices. Here are a few headset/speaker models using which this application is tested - JBL Tune 215BT earbuds, OnePlus Bulltes Wireless Z2 earbuds, INFINITY FUZE PINT speaker.
 
 ## Software setup
 
@@ -136,30 +135,11 @@ For a list of supported IDEs and more details, see the "Exporting to IDEs" secti
 
 ## Operation
 
-1. Since any external Bluetooth® speaker/earbuds can be used, please edit the `BDA_ADDRESS_BYTE_X` macros with the correct Bluetooth® device address of the speaker/earbuds.
+1. Connect the board to your PC using the provided USB cable through the KitProg3 USB connector.
 
-2. Please find out the Bluetooth® Device Address (BDA) of the external Bluetooth® speaker/earbuds through any Bluetooth® Scanner app available on the smartphone.
+2. Open a terminal program and select the KitProg3 COM port. Set the serial port parameters to 8N1 and 115200 baud.
 
-3. Edit the Bluetooth® Device Address in the file `source/source_bluetooth/a2dp_source.c`. 
-
-4. For eg) if the Bluetooth® Device Address  of the BT speaker/earbuds is `0D 01 74 C3 45 7B`, then add the Bluetooth® Device Address of the external Bluetooth® speaker/earbuds in the macros as below.
-
-   ```/* Bluetooth Device Address of the Speaker*/
-   /* Bluetooth Device Address of the Speaker/Earbud */
-   #define BDA_ADDRESS_BYTE_0					0x0D
-   #define BDA_ADDRESS_BYTE_1					0x01
-   #define BDA_ADDRESS_BYTE_2					0x74
-   #define BDA_ADDRESS_BYTE_3					0xC3
-   #define BDA_ADDRESS_BYTE_4					0x45
-   #define BDA_ADDRESS_BYTE_5					0x7B
-   
-   ```
-
-5. Connect the board to your PC using the provided USB cable through the KitProg3 USB connector.
-
-6. Open a terminal program and select the KitProg3 COM port. Set the serial port parameters to 8N1 and 115200 baud.
-
-7. Program the board using one of the following:
+3. Program the board using one of the following:
 
    <details><summary><b>Using Eclipse IDE for ModusToolbox&trade; software</b></summary>
 
@@ -181,22 +161,55 @@ For a list of supported IDEs and more details, see the "Exporting to IDEs" secti
       ```
    </details>
 
-8. After programming, the application starts automatically and will try to pair and connect to the Bluetooth® speaker/earbuds.
+4. After programming, the application starts automatically. Confirm that "PSoC™ 6 MCU: Bluetooth® Classic- A2DP source" is displayed on the UART terminal.
 
-9. If connection is successful, pressing the user-button will start the music playback.
+5. Confirm that "Do you want to skip the Bluetooth Speaker/Earbuds scan and directly enter the address of the Bluetooth Speaker/Earbuds (Y/N) ?" is displayed on the UART terminal as shown in **Figure 1**. Enter "Y"/"y" (YES) to skip the Bluetooth® speaker/earbuds scan or enter "N"/"n" (NO) to start the Bluetooth® speaker/earbuds scan.
 
-10. Pressing the user-button again will pause the playback.
+      **Figure 1. Waiting for the user response to skip the Bluetooth® speaker/earbuds scan**
 
-11. If the board is `CY8CKIT-062S2-43012`, then the blinking RED LED will change to blinking GREEN LED on successful connection to the Bluetooth® speaker/earbuds.
-    On disconnection, it will switch back to blinking RED LED.
+      ![](images/user-response-to-skip-the-bluetooth-scan.png)
 
-12. If the board is `CY8CPROTO-062-4343W`, since there is only RED LED, it will continue blinking irrespective of the connection status.
+6. After giving response on the UART terminal. Confirm that the user LED toggles approximately at a 1 second interval.
 
-13. If the Bluetooth® speaker/earbuds is disconnected, to reconnect back, please reset the  PSoC&trade; 6 board.
+7. If you entered "Y"/"y" (YES), it will start scan and print all the advertising Bluetooth® speaker/earbuds, once the scanning is completed and confirm that "Enter the Bluetooth Device Address of the Speaker/Earbuds (XX XX XX XX XX XX) :" is displayed on the UART terminal as shown in **Figure 2**.
 
-14. If there is a connection failure with BT speaker/earbuds, please reset the PSoC&trade; 6 board and the Bluetooth® speaker/earbuds.
+      **Figure 2. Scan and print the advertising Bluetooth® speaker/earbuds**
 
-    
+      ![](images/scan-and-print-the-advertising-bluetooth-device.png)
+
+8. If you entered "N"/"n" (NO), then confirm that "Enter the Bluetooth Device Address of the Speaker/Earbuds (XX XX XX XX XX XX) :" is displayed on the UART terminal as shown in **Figure 3**.
+
+      **Figure 3. Directly enter the Bluetooth®  Device Address**
+
+      ![](images/entering-the-bluetooth-device-address.png)
+
+9. Enter the Bluetooth® speaker/earbuds device address on the UART terminal.
+
+10. After entering the Bluetooth® speaker/earbuds device address on the UART terminal. Confirm that "Do you want to connect to the Bluetooth Speaker/Earbuds (Y/N) ?" is displayed on the UART terminal as shown in **Figure 4**.
+
+      **Figure 4. Waiting for the user response to connect to the Bluetooth® speaker/earbuds**
+
+      ![](images/user-response-to-connect-to-the-bluetooth-device.png)
+
+11. If you entered "N"/"n" (NO), then it will again display the "Enter the Bluetooth Device Address of the Speaker/Earbuds (XX XX XX XX XX XX) :" on the UART terminal per **Step 9** and follow again from the **Step 9**.
+
+12. If you entered "Y"/"y" (YES), then it will connect to the Bluetooth® speaker/earbuds.
+
+13. The UART terminal displays the message as shown in **Figure 5**. If connection is successful, pressing the user-button will start the music playback.
+
+      **Figure 5. Successfully connected to the Bluetooth® speaker/earbuds**
+
+      ![](images/streaming-the-audio.png)
+
+14. Pressing the user-button again will pause the playback.
+
+15. Then the user LED will change to toggles approximately at a 100-millisecond interval on successful connection to the Bluetooth® speaker/earbuds.
+    On disconnection, it will switch back to toggles approximately at a 1 second interval.
+
+16. If the Bluetooth® speaker/earbuds is disconnected, to reconnect back, please reset the  PSoC&trade; 6 board.
+
+17. If there is a connection failure with Bluetooth® speaker/earbuds, please reset the PSoC&trade; 6 board and the Bluetooth® speaker/earbuds.
+
 
 ## Debugging
 
@@ -214,6 +227,8 @@ On connection establishment, the PSoC&trade; 6 configures the Bluetooth® speake
 
 The streaming task sends the encoded packets using `wiced_bt_avdt_write_req` to send packets to the Bluetooth® Controller which then sends it to the Bluetooth® speaker/earbuds.
 
+The A2DP source on PSoC&trade; 6 is configured to work on Bluetooth® speaker/earbuds which supports 48KHz.
+
 ## Other resources
 
 Infineon provides a wealth of data at [www.Infineon.com](http://www.infineon.com/) to help you select the right device, and quickly and effectively integrate it into your design.
@@ -227,8 +242,7 @@ Document title: *002-37317 - PSoC 6 MCU: Streaming Audio with BT Classic A2DP so
 | Version | Description of change      |
 | ------- | -------------------------- |
 | 1.0.0   | New community code example |
-
-
+| 1.1.0   | Added support for the CY8CPROTO-062S2-43439 kit |
 
 ---------------------------------------------------------
 

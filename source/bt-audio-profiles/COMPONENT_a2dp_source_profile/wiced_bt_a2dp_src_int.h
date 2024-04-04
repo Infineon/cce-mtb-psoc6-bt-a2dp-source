@@ -9,19 +9,19 @@
 
 #pragma once
 
+#include <stdio.h>
 #include "../COMPONENT_profiles_include/wiced_bt_a2dp_source.h"
 #include "wiced_bt_avdt.h"
 #include "wiced_bt_a2dp_int.h"
 #include "wiced_bt_avrc.h"
 #include "wiced_memory.h"
-#include "wiced_bt_trace.h"
 
 /*****************************************************************************
 **  Constants
 *****************************************************************************/
 
 /* Set it to TRUE for adding debugging traces */
-//#define WICED_BT_A2DP_SOURCE_DEBUG TRUE
+/* #define WICED_BT_A2DP_SOURCE_DEBUG TRUE */
 
 #ifndef WICED_BT_A2DP_SOURCE_DEBUG
 #define WICED_BT_A2DP_SOURCE_DEBUG FALSE
@@ -437,9 +437,9 @@ extern wiced_result_t wiced_bt_a2dp_source_streaming_stop( uint16_t handle );
 extern void wiced_bt_a2dp_source_stream_close( uint16_t handle );
 
 #if (defined(WICED_BT_A2DP_SOURCE_DEBUG) && WICED_BT_A2DP_SOURCE_DEBUG == TRUE)
-#define WICED_BTA2DP_SRC_TRACE   WICED_BT_TRACE
+#define WICED_BTA2DP_SRC_TRACE   printf
 #else
 #define WICED_BTA2DP_SRC_TRACE(...)
 #endif
 
-#define WICED_BTA2DP_SRC_ERROR   WICED_BT_TRACE
+#define WICED_BTA2DP_SRC_ERROR   printf

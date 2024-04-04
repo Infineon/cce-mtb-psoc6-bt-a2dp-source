@@ -4,10 +4,10 @@
  * Bluetooth WICED Utility functions
  *
  */
+#include <stdio.h>
 #include "wiced_bt_utils.h"
 #include "string.h"
 #include "wiced_bt_dev.h"
-#include "wiced_bt_trace.h"
 #include "wiced_memory.h"
 #include <stdlib.h>
 
@@ -37,10 +37,10 @@ BD_ADDR bd_addr_null= {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 **  Functions
 *****************************************************************************/
 
-//
-// Implementation of standard char manipulation functions
-// Currently only used here.  If necessary, can be exposed by removing static inline
-//
+/*
+Implementation of standard char manipulation functions
+Currently only used here.  If necessary, can be exposed by removing static inline
+*/
 static inline int
 wiced_bt_utils_isupper(char c)
 {
@@ -65,11 +65,11 @@ wiced_bt_utils_isdigit(char c)
     return (c >= '0' && c <= '9');
 }
 
-//
-// Implementation of standard string manipulation functions
-//
-// Note:  strlen strncpy strcmp and strstr defined in chip ROMs
-//        strchr defined in all chip ROMs except 20706A2 and 43012C0
+/*
+ Implementation of standard string manipulation functions
+
+ Note:  strlen strncpy strcmp and strstr defined in chip ROMs
+        strchr defined in all chip ROMs except 20706A2 and 43012C0 */
 
 int utl_strncmp(const char *s1, const char *s2, int n)
 {
@@ -110,7 +110,7 @@ char *utl_strrchr(char *s, int c)
 }
 
 #if defined (CYW20706A2) || defined (CYW43012C0)
-// strchr defined in ROM for most chips, define here for the missing ones
+/* strchr defined in ROM for most chips, define here for the missing ones */
 char *utl_strchr(const char *s, int c)
 {
     const char ch = c;
@@ -310,9 +310,9 @@ unsigned long utl_strtoul(const char *nptr, char **endptr, int base)
 }
 
 
-//
-// Bluetooth Device Address (BD_ADDR) manipulation functions
-//
+/*
+ Bluetooth Device Address (BD_ADDR) manipulation functions
+*/
 
 /*******************************************************************************
 ** Function         utl_bdcpy
@@ -396,11 +396,11 @@ wiced_bt_read_raw_rssi_command_complete_cback_t * p_callback = NULL;
 void read_raw_rssi_callback(wiced_bt_dev_vendor_specific_command_complete_params_t *p_cmd_cplt_param)
 {
     uint8_t* p_data = p_cmd_cplt_param->p_param_buf;
-    WICED_BT_TRACE("opcode: %x\n", p_cmd_cplt_param->opcode);       //opcode 0xfc48
-    WICED_BT_TRACE("param_len: %x\n", p_cmd_cplt_param->param_len); //length
-    WICED_BT_TRACE("p_data - %02x\n", p_data[0]);                   //status
-    WICED_BT_TRACE("p_data - %02x %02x\n", p_data[1], p_data[2]);   //connection_handle
-    WICED_BT_TRACE("p_data - %02x (%d dB)\n", p_data[3], (signed char) p_data[3]); //rssi
+    printf("opcode: %x\n", p_cmd_cplt_param->opcode);       /* opcode 0xfc48 */
+    printf("param_len: %x\n", p_cmd_cplt_param->param_len); /* length */
+    printf("p_data - %02x\n", p_data[0]);                   /* status */
+    printf("p_data - %02x %02x\n", p_data[1], p_data[2]);   /* connection_handle */
+    printf("p_data - %02x (%d dB)\n", p_data[3], (signed char) p_data[3]); /* rssi */
     if(p_callback)
         p_callback(p_cmd_cplt_param);
 }
@@ -413,7 +413,7 @@ wiced_bt_dev_status_t wiced_bt_read_raw_rssi(uint16_t connection_handle, wiced_b
     uint8_t  *p = buffer;
     p_callback = p_callback_in;
     UINT16_TO_STREAM(p, connection_handle);
-    WICED_BT_TRACE("opcode_vsc_read_raw_rssi:%x, buffer[0]:%02x, buffer[1]:%02x\n", opcode_vsc_read_raw_rssi, buffer[0], buffer[1]);
+    printf("opcode_vsc_read_raw_rssi:%x, buffer[0]:%02x, buffer[1]:%02x\n", opcode_vsc_read_raw_rssi, buffer[0], buffer[1]);
     bt_status = wiced_bt_dev_vendor_specific_command(opcode_vsc_read_raw_rssi, 2, buffer, read_raw_rssi_callback);
     if (bt_status != WICED_BT_PENDING)
     {

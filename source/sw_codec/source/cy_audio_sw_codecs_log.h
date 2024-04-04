@@ -63,7 +63,7 @@ extern "C" {
 #ifdef ENABLE_ASC_DBG_LOGS
 #define cy_asc_log_dbg(format, ...) printf("[ASC] " format " \n", ##__VA_ARGS__);
 #else
-#define cy_as_log_dbg(format, ...)
+#define cy_asc_log_dbg(format, ...)
 #endif
 #elif ENABLE_ASC_LOGS
 #define cy_asc_log_info(format, ...) cy_log_msg(CYLF_MIDDLEWARE, CY_LOG_INFO, "[ASC] " format " \n", ##__VA_ARGS__);

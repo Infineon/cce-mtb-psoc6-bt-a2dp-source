@@ -198,7 +198,7 @@ void wiced_bt_a2dp_source_ssm_execute(wiced_bt_a2dp_source_ccb_t *p_ccb,
     if (p_ccb->p_scb == NULL)
     {
         /* This stream is not registered */
-        WICED_BTA2DP_SRC_ERROR("%s: ERROR: channel not registered \n", __FUNCTION__);
+        WICED_BTA2DP_SRC_ERROR("%s: ERROR: channel not registered \r\n", __FUNCTION__);
         return;
     }
 
@@ -209,19 +209,19 @@ void wiced_bt_a2dp_source_ssm_execute(wiced_bt_a2dp_source_ccb_t *p_ccb,
     found = wiced_bt_a2dp_source_search_event(state_table_entry, event, &next_state, &pfhandler);
     if(found == WICED_FALSE)
     {
-        WICED_BTA2DP_SRC_TRACE("%s: event=0x%x state=0x%x not handled \n", __FUNCTION__,
+        WICED_BTA2DP_SRC_TRACE("%s: event=0x%x state=0x%x not handled \r\n", __FUNCTION__,
             event, p_ccb->state);
         return;
     }
 
 #if (defined(WICED_BT_A2DP_SOURCE_DEBUG) && WICED_BT_A2DP_SOURCE_DEBUG == TRUE)
-    WICED_BTA2DP_SRC_TRACE("%s: current-state=%s event=%s next-state=%s \n",
+    WICED_BTA2DP_SRC_TRACE("%s: current-state=%s event=%s next-state=%s \r\n",
             __FUNCTION__,
             wiced_bt_a2dp_source_st_code(p_ccb->state),
             wiced_bt_a2dp_source_evt_code(event),
             wiced_bt_a2dp_source_st_code(next_state));
 #else
-    WICED_BTA2DP_SRC_TRACE("%s: current-state=0x%x event=0x%x next-state=0x%x",
+    WICED_BTA2DP_SRC_TRACE("%s: current-state=0x%x event=0x%x next-state=0x%x \r\n",
             __FUNCTION__, p_ccb->state, event, next_state);
 #endif
 
@@ -229,9 +229,9 @@ void wiced_bt_a2dp_source_ssm_execute(wiced_bt_a2dp_source_ccb_t *p_ccb,
 
     if(pfhandler != NULL)
     {
-        WICED_BTA2DP_SRC_TRACE(" ---> Entering the function handler !\r\n");
+        WICED_BTA2DP_SRC_TRACE(" ---> Entering the function handler ! \r\n");
         pfhandler(p_ccb, p_data);
-        WICED_BTA2DP_SRC_TRACE(" <--- Exiting the function handler !\r\n");
+        WICED_BTA2DP_SRC_TRACE(" <--- Exiting the function handler ! \r\n");
     }
 }
 
@@ -262,7 +262,7 @@ wiced_result_t wiced_bt_a2dp_source_init_state_machine(void)
             if(state_table[j].event < state_table[j-1].event)
             {
                 WICED_BTA2DP_SRC_ERROR("%s: Incorrect state table entry. state:%d, entry:%d. \
-                    IMPORTANT: THE EVENTS MUST BE LISTED IN ASCENDING ORDER \n", __FUNCTION__,i,j);
+                    IMPORTANT: THE EVENTS MUST BE LISTED IN ASCENDING ORDER \r\n", __FUNCTION__,i,j);
                 return WICED_BADARG;
             }
         }

@@ -62,7 +62,6 @@
 #include "wiced_bt_a2d_sbc.h"
 #include "wiced_bt_a2dp_source.h"
 #include "wiced_bt_a2dp_defs.h"
-#include "wiced_bt_trace.h"
 #include "hcidefs.h"
 #include "wiced_bt_gatt.h"
 #include "wiced_bt_cfg.h"
@@ -71,7 +70,7 @@
 #include "wiced_timer.h"
 #include "sbc_encoder_api.h"
 #include "asc_wav_header_parser.h"
-
+#include "cy_em_eeprom.h"
 
 typedef short SINT16;
 typedef int SINT32;
@@ -128,6 +127,38 @@ typedef int SINT32;
 #define A2DP_PEER_DISCONNECTED          0
 #define A2DP_PEER_MAINTAIN_STATUS       2
 
+/* EEPROM macros */
+/* EEPROM is used to store the paired peer BD address  */
+
+/* Logical Size of Emulated EEPROM in bytes. */
+#define LOGICAL_EEPROM_SIZE     (6u)
+#define LOGICAL_EEPROM_START    (0u)
+
+/* EEPROM Configuration details. All the sizes mentioned are in bytes.
+ * For details on how to configure these values refer to cy_em_eeprom.h. The
+ * library documentation is provided in Em EEPROM API Reference Manual. The user
+ * access it from ModusToolbox IDE Quick Panel > Documentation> 
+ * Cypress Em_EEPROM middleware API reference manual
+ */
+#define EEPROM_SIZE             (256u)
+#define BLOCKING_WRITE          (1u)
+#define REDUNDANT_COPY          (1u)
+#define WEAR_LEVELLING_FACTOR   (2u)
+#define SIMPLE_MODE             (0u)
+
+/* Set the macro FLASH_REGION_TO_USE to either USER_FLASH or
+ * EMULATED_EEPROM_FLASH to specify the region of the flash used for
+ * emulated EEPROM.
+ */
+#define USER_FLASH              (0u)
+#define EMULATED_EEPROM_FLASH   (1u)
+
+#if CY_EM_EEPROM_SIZE
+/* CY_EM_EEPROM_SIZE to determine whether the target has a dedicated EEPROM region or not */
+#define FLASH_REGION_TO_USE     EMULATED_EEPROM_FLASH
+#else
+#define FLASH_REGION_TO_USE     USER_FLASH
+#endif
 
 /******************************************************************************
  * Enumerations
@@ -180,8 +211,6 @@ typedef struct
 /*******************************************************************************
 * Function prototypes
 *******************************************************************************/
-uint16_t a2dp_source_write_nvram (int nvram_id, int data_len, void *p_data);
-uint16_t a2dp_source_read_nvram (int nvram_id, void *p_data, int data_len);
 wiced_result_t a2dp_source_management_callback (
         wiced_bt_management_evt_t event,
         wiced_bt_management_evt_data_t *p_event_data);

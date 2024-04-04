@@ -13,7 +13,6 @@
 #include "wiced_bt_avdt.h"
 #include "wiced_bt_sdp.h"
 #include "wiced_bt_a2dp_src_int.h"
-#include <stdio.h>
 
 #if APP_CHIP == 20703
 #define WICED_ALREADY_INITIALIZED 1000
@@ -73,25 +72,25 @@ wiced_result_t wiced_bt_a2dp_source_init(wiced_bt_a2dp_source_config_data_t *p_c
     /* Check if already initialized, then just return with error */
     if(wiced_bt_a2dp_source_cb.is_init == WICED_TRUE)
     {
-        WICED_BTA2DP_SRC_ERROR("%s: Already initialized \n", __FUNCTION__);
+        WICED_BTA2DP_SRC_ERROR("%s: Already initialized \r\n", __FUNCTION__);
         return WICED_ALREADY_INITIALIZED;
     }
 
     if(p_config_data == NULL)
     {
-        WICED_BTA2DP_SRC_ERROR("%s: Config data is not present \n", __FUNCTION__);
+        WICED_BTA2DP_SRC_ERROR("%s: Config data is not present \r\n", __FUNCTION__);
         return WICED_BADARG;
     }
 
     if(p_config_data->codec_capabilities.info == NULL)
     {
-        WICED_BTA2DP_SRC_ERROR("%s: codec_capabilities info is not present \n", __FUNCTION__);
+        WICED_BTA2DP_SRC_ERROR("%s: codec_capabilities info is not present \r\n", __FUNCTION__);
         return WICED_BADARG;
     }
 
     if (heap == NULL)
     {
-        WICED_BTA2DP_SRC_ERROR("%s: heap ptr is NULL \n", __FUNCTION__);
+        WICED_BTA2DP_SRC_ERROR("%s: heap ptr is NULL \r\n", __FUNCTION__);
         return WICED_BADARG;
     }
 
@@ -109,13 +108,13 @@ wiced_result_t wiced_bt_a2dp_source_init(wiced_bt_a2dp_source_config_data_t *p_c
 
     /* Copy the callback information */
     wiced_bt_a2dp_source_cb.control_cb = control_cb;
-    //wiced_bt_a2dp_source_cb.data_cb = data_cb;
+    /* wiced_bt_a2dp_source_cb.data_cb = data_cb; */
 
     wiced_bt_a2dp_source_cb.heap = heap;
     /* Register with AVDT */
     if( (ret = wiced_bt_a2dp_source_register()) != WICED_SUCCESS)
     {
-        WICED_BTA2DP_SRC_ERROR("%s: Register with AVDT failed \n", __FUNCTION__);
+        WICED_BTA2DP_SRC_ERROR("%s: Register with AVDT failed \r\n", __FUNCTION__);
         return ret;
     }
 
@@ -130,7 +129,7 @@ wiced_result_t wiced_bt_a2dp_source_deinit(void)
     /* Check if already initialized, then just return with error */
     if(wiced_bt_a2dp_source_cb.is_init != WICED_TRUE)
     {
-        WICED_BTA2DP_SRC_ERROR("%s: Not initialized \n", __FUNCTION__);
+        WICED_BTA2DP_SRC_ERROR("%s: Not initialized \r\n", __FUNCTION__);
         return WICED_NOTUP;
     }
 
@@ -152,14 +151,14 @@ wiced_result_t wiced_bt_a2dp_source_connect(wiced_bt_device_address_t bd_address
     /* Check if already initialized, then just return with error */
     if(wiced_bt_a2dp_source_cb.is_init != WICED_TRUE)
     {
-        WICED_BTA2DP_SRC_ERROR("%s: Not initialized \n", __FUNCTION__);
+        WICED_BTA2DP_SRC_ERROR("%s: Not initialized \r\n", __FUNCTION__);
         return WICED_NOTUP;
     }
 
     if((p_buf = (wiced_bt_a2dp_source_api_data_t *)
         wiced_bt_get_buffer_from_heap(wiced_bt_a2dp_source_cb.heap, sizeof(wiced_bt_a2dp_source_api_data_t))) == NULL)
     {
-        printf("Out of Heap %s \n",__FUNCTION__);
+        printf("Out of Heap %s \r\n",__FUNCTION__);
         return WICED_OUT_OF_HEAP_SPACE;
     }
 
@@ -178,7 +177,7 @@ wiced_result_t wiced_bt_a2dp_source_disconnect(uint16_t handle)
     /* Check if already initialized, then just return with error */
     if(wiced_bt_a2dp_source_cb.is_init != WICED_TRUE)
     {
-        WICED_BTA2DP_SRC_ERROR("%s: Not initialized \n", __FUNCTION__);
+        WICED_BTA2DP_SRC_ERROR("%s: Not initialized \r\n", __FUNCTION__);
         return WICED_NOTUP;
     }
 
@@ -204,7 +203,7 @@ wiced_result_t wiced_bt_a2dp_source_start(uint16_t handle, wiced_bt_a2dp_codec_i
     /* Check if already initialized, then just return with error */
     if(wiced_bt_a2dp_source_cb.is_init != WICED_TRUE)
     {
-        WICED_BTA2DP_SRC_ERROR("%s: Not initialized \n", __FUNCTION__);
+        WICED_BTA2DP_SRC_ERROR("%s: Not initialized \r\n", __FUNCTION__);
         return WICED_NOTUP;
     }
 
@@ -231,7 +230,7 @@ wiced_result_t wiced_bt_a2dp_source_send_start_response( uint16_t handle, uint8_
     /* Check if already initialized, then just return with error */
     if(wiced_bt_a2dp_source_cb.is_init != WICED_TRUE)
     {
-        WICED_BTA2DP_SRC_ERROR("%s: Not initialized \n", __FUNCTION__);
+        WICED_BTA2DP_SRC_ERROR("%s: Not initialized \r\n", __FUNCTION__);
         return WICED_NOTUP;
     }
 
@@ -259,7 +258,7 @@ wiced_result_t wiced_bt_a2dp_source_suspend(uint16_t handle)
     /* Check if already initialized, then just return with error */
     if(wiced_bt_a2dp_source_cb.is_init != WICED_TRUE)
     {
-        WICED_BTA2DP_SRC_ERROR("%s: Not initialized \n", __FUNCTION__);
+        WICED_BTA2DP_SRC_ERROR("%s: Not initialized \r\n", __FUNCTION__);
         return WICED_NOTUP;
     }
 
@@ -282,7 +281,7 @@ wiced_result_t wiced_bt_a2dp_source_start_streaming(uint8_t handle, uint8_t *p_m
     /* Check if already initialized, then just return with error */
     if(wiced_bt_a2dp_source_cb.is_init != WICED_TRUE)
     {
-        WICED_BTA2DP_SRC_ERROR("%s: Not initialized \n", __FUNCTION__);
+        WICED_BTA2DP_SRC_ERROR("%s: Not initialized \r\n", __FUNCTION__);
         return WICED_NOTUP;
     }
     return wiced_bt_avdt_write_req(handle, p_media_buf, buf_len, time_stamp, m_pt, AVDT_DATA_OPT_NONE);

@@ -65,12 +65,12 @@ void get_sbc_config(cy_asc_sbc_encode_config_t *sbc_config, bool wide_band, uint
     }
     else
     {
-        //A2DP
+        /* A2DP */
         sbc_config->allocation_method = 1;
         sbc_config->sbc_mode = 0;
         sbc_config->sub_blocks = 16;
         sbc_config->sub_bands = 8;
-        if(0 == quality) // Medium
+        if(0 == quality) /* Medium */
         {
             if(1 == n_channels && sample_rate == 48000)
             {
@@ -93,7 +93,7 @@ void get_sbc_config(cy_asc_sbc_encode_config_t *sbc_config, bool wide_band, uint
                 sbc_config->channel_mode = 3;
             }
         }
-        else if(1 == quality) // High
+        else if(1 == quality) /* High*/
         {
             if(1 == n_channels && sample_rate == 48000)
             {
@@ -108,7 +108,7 @@ void get_sbc_config(cy_asc_sbc_encode_config_t *sbc_config, bool wide_band, uint
             else if(2 == n_channels && sample_rate == 48000)
             {
                 sbc_config->bit_pool = 51;
-                sbc_config->channel_mode = 2;//original 3;
+                sbc_config->channel_mode = 2; /* original 3; */
             }
             else if(2 == n_channels && sample_rate == 44100)
             {
@@ -149,23 +149,12 @@ int sbc_encoder_app_init(cy_audio_sw_codec_t *enc_handle, sbc_encoder_params_t *
     enc_config.frame_ms         = CY_AUDIO_CODEC_FRAME_MS_UNKNOWN;
     enc_config.codec_type       = CY_AUDIO_CODEC_TYPE_SBC;
 
-
     sbc_config.allocation_method = sbc_encoder_params->sbc_config.allocation_method;
     sbc_config.sbc_mode          = sbc_encoder_params->sbc_config.sbc_mode;
     sbc_config.sub_blocks        = sbc_encoder_params->sbc_config.sub_blocks;
     sbc_config.sub_bands         = sbc_encoder_params->sbc_config.sub_bands;
     sbc_config.bit_pool          = sbc_encoder_params->sbc_config.bit_pool;
     sbc_config.channel_mode      = sbc_encoder_params->sbc_config.channel_mode;
-
-    printf("***SBC config parameters*** \r\n");
-    printf("Allocation method %d \r\n",sbc_config.allocation_method);
-    printf("SBC mode %d \r\n",sbc_config.sbc_mode);
-    printf("Sub blocks %d \r\n",sbc_config.sub_blocks);
-    printf("Sub bands %d \r\n",sbc_config.sub_bands);
-    printf("Bit Pool %d \r\n",sbc_config.bit_pool);
-    printf("Channel Mode %d \r\n",sbc_config.channel_mode);
-
-
 
     enc_config.codec_specific_config.sbc = sbc_config;
 

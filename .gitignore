@@ -23,8 +23,8 @@ GeneratedSource/
 
 # ModusToolbox build system output
 build/
-#Debug/
-#Release/
+Debug/
+Release/
 *_build/
 
 # Visual Studio Code

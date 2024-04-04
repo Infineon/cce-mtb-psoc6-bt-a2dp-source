@@ -39,21 +39,15 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-
-#ifdef  WICED_BT_TRACE_ENABLE
-#include "wiced_bt_trace.h"
-#endif
 #include "a2dp_source.h"
 #include "cyhal_gpio.h"
 #include "cybsp.h"
 #include <wav_1_test.h>
 
-
 /******************************************************************************
  * Macros
  *****************************************************************************/
-
-#define A2DP_SOURCE_NVRAM_ID                0
+#define A2DP_SOURCE_NVRAM_ID                0 
 #define WICED_HS_EIR_BUF_MAX_SIZE           (264U)
 
 #define LINE_SPEED_44K                      (330U)
@@ -66,9 +60,6 @@
 #define FMT_DATA_LEN_4                      (4U)
 
 #define AUDIO_SAMPLE_RATE_48kHz             (48000U)
-#define AUDIO_SAMPLE_RATE_44_1kHz           (44100U)
-#define AUDIO_SAMPLE_RATE_32kHz             (32000U)
-#define AUDIO_SAMPLE_RATE_16kHz             (16000U)
 
 #define AUDIO_CHANNEL_MONO                  1
 #define AUDIO_CHANNEL_STEREO                2
@@ -94,20 +85,9 @@
 #define TASK_DELAY_1MS                      1
 #define TASK_DELAY_10MS                     10
 
-
-/* Bluetooth Device Address of the Speaker/Earbud */
-#define BDA_ADDRESS_BYTE_0                  0x4C
-#define BDA_ADDRESS_BYTE_1                  0x72
-#define BDA_ADDRESS_BYTE_2                  0x74
-#define BDA_ADDRESS_BYTE_3                  0xED
-#define BDA_ADDRESS_BYTE_4                  0x9F
-#define BDA_ADDRESS_BYTE_5                  0xC1
-
-
 /* ***************************************************************************
  * Static variables
  * **************************************************************************/
-
 static uint16_t handle = 0x0000;
 static uint32_t  SampleRate      = AUDIO_SAMPLE_RATE_48kHz;
 static uint64_t  usTimeout;
@@ -124,8 +104,10 @@ static TaskHandle_t a2dp_task_handle;
 /* ***************************************************************************
  * Global variables
  * **************************************************************************/
+int8_t connection_status;
+bool initiate_bt_device_connection = false;
+bool skip_bt_scan = false;
 tAV_APP_CB      av_app_cb;
-
 SemaphoreHandle_t stream_buff_sem;
 uint16_t delay_reported_from_sink_micro_sec = 0;
 unsigned int    frame_size;
@@ -146,12 +128,8 @@ int16_t wav_header=0;
 uint8_t *a2dp_frame;
 uint8_t *encoder_output;
 uint8_t  status_flag = 0;
-
-#ifdef PSOC6_43012_BOARD
-int8_t connection_status;
-#endif
-
 cyhal_gpio_callback_data_t gpio_btn_callback_data;
+uint8_t eeprom_write_array[LOGICAL_EEPROM_SIZE] = {0};
 
 /******************************************************************************
  * Extern variables and functions
@@ -161,73 +139,21 @@ extern const uint8_t                        a2dp_source_sdp_db[A2DP_SOURCE_SDP_D
 extern const wiced_bt_cfg_settings_t        a2dp_source_cfg_settings;
 extern wiced_bt_a2dp_source_config_data_t   bt_audio_config;
 extern tAV_APP_CB av_app_cb;
+extern cy_stc_eeprom_context_t Em_EEPROM_context;
 
 /*******************************************************************************
 * Function prototypes
 *******************************************************************************/
-
 void a2dp_source_audio_thread (void* arg);
 static uint8_t a2dp_source_encode_sendSBC ();
 static void a2dp_source_parse_sbc_params (wiced_bt_a2d_sbc_cie_t * pSbc, uint32_t *pSf,
-                                          uint32_t *pBlocks, uint32_t *pSubbands, uint32_t *pMode);
+                                       uint32_t *pBlocks, uint32_t *pSubbands, uint32_t *pMode);
 uint16_t a2dp_source_calculate_delay ();
 static void gpio_interrupt_handler(void *handler_arg, cyhal_gpio_event_t event);
 
 /******************************************************************************
  * Function definitions
  ******************************************************************************/
-
-/* ****************************************************************************
- * Function Name: get_audio_freq_name
- *******************************************************************************
- * Summary:
- *          Gives the string equivalent for the Event type
- *
- * Parameters:
- *          freq - Sample Frequency type
- *
- * Return:
- *          Pointer to String containing the Frequency Name
- *
- * ***************************************************************************/
-static const char *get_audio_freq_name(uint8_t freq)
-{
-    switch((int)freq)
-    {
-        CASE_RETURN_STR(A2D_SBC_IE_SAMP_FREQ_16)
-        CASE_RETURN_STR(A2D_SBC_IE_SAMP_FREQ_32)
-        CASE_RETURN_STR(A2D_SBC_IE_SAMP_FREQ_44)
-        CASE_RETURN_STR(A2D_SBC_IE_SAMP_FREQ_48)
-    }
-
-    return NULL;
-}
-
-/* ****************************************************************************
- * Function Name: get_audio_chcfg_name
- *******************************************************************************
- * Summary:
- *          Gives the string equivalent for the Event type
- *
- * Parameters:
- *          chcfg - Channel Configuration type
- *
- * Return:
- *          Pointer to String containing the Channel Configuration Name
- *
- * ***************************************************************************/
-static const char *get_audio_chcfg_name(uint8_t chcfg)
-{
-    switch((int)chcfg)
-    {
-        CASE_RETURN_STR(A2D_SBC_IE_CH_MD_MONO)
-        CASE_RETURN_STR(A2D_SBC_IE_CH_MD_DUAL)
-        CASE_RETURN_STR(A2D_SBC_IE_CH_MD_STEREO)
-        CASE_RETURN_STR(A2D_SBC_IE_CH_MD_JOINT)
-    }
-
-    return NULL;
-}
 
 /* ****************************************************************************
  * Function Name: a2dp_source_deinit_streaming
@@ -244,7 +170,7 @@ static const char *get_audio_chcfg_name(uint8_t chcfg)
  * ***************************************************************************/
 void a2dp_source_deinit_streaming()
 {
-    WICED_BT_TRACE ("De-iniatializing the stream buffer \n");
+    printf("De-iniatializing the stream buffer \r\n");
     bStreamingActive = FALSE;
     if (a2dp_frame != NULL)
     {
@@ -273,7 +199,6 @@ void a2dp_source_deinit_streaming()
  * ***************************************************************************/
 void a2dp_source_update_sink_rep_delay(uint16_t delay_ms)
 {
-    WICED_BT_TRACE("Updated Sink reported delay %u ms", delay_ms);
     delay_reported_from_sink_micro_sec += delay_ms * 1000;
 }
 
@@ -349,13 +274,10 @@ void a2dp_source_start_streaming (wiced_bool_t bActivate, uint8_t avdt_handle,
     /* Safety check in case we are called more than once to do the same thing */
     if (bActivate == bStreamingActive)
     {
-        WICED_BT_TRACE ("Streaming State: Already in %s",
+        printf("Streaming State: Already in %s",
                       bActivate ? "ACTIVE" : "SUSPEND");
         return;
     }
-
-    WICED_BT_TRACE ("Streaming State: setting to %s \n",
-                  bActivate ? "ACTIVE" : "SUSPEND");
 
     if (!bActivate)
     {
@@ -365,21 +287,12 @@ void a2dp_source_start_streaming (wiced_bool_t bActivate, uint8_t avdt_handle,
 
     stream_avdt_handle = avdt_handle;
 
-    WICED_BT_TRACE ("Streaming parameters: %u  samplesPerSec: %u  peer_mtu: %u",
-                  bActivate, p_stream_cfg->samp_freq, peer_mtu);
-
-    printf("\r\nPeer device configured to --> samp_freq %x ch_mode %d block_len %d num_subbands %d alloc_mthd %d max_bitpool %d min_bitpool %d \r\n",\
-            p_stream_cfg->samp_freq,p_stream_cfg->ch_mode,p_stream_cfg->block_len,p_stream_cfg->num_subbands,p_stream_cfg->alloc_mthd,p_stream_cfg->max_bitpool,p_stream_cfg->min_bitpool);
-
     NumBlocks       = p_stream_cfg->block_len;
     NumSubBands     = p_stream_cfg->num_subbands;
     Mode            = p_stream_cfg->ch_mode;
 
     /* Extract the codec parameters */
     a2dp_source_parse_sbc_params (p_stream_cfg, &SampleRate, &NumBlocks, &NumSubBands, &Mode);
-
-    WICED_BT_TRACE ("SampleRate: %u  NumBlocks: %u  NumSubBands: %u  Mode: %u",
-                    SampleRate, NumBlocks, NumSubBands, Mode);
 
     NumChannels = Mode >= SBC_STEREO ? SBC_STEREO : SBC_DUAL;
     join = Mode == SBC_JOINT_STEREO ? SBC_DUAL : SBC_MONO;
@@ -396,8 +309,6 @@ void a2dp_source_start_streaming (wiced_bool_t bActivate, uint8_t avdt_handle,
 
     asc_reset_params();
     wav_header = asc_stream_read_counter;
-
-    printf("Wav header is %d \r\n",wav_header);
 
     result = sbc_encoder_app_init(&enc_handle, &sbc_params);
     if (result != CY_RSLT_SUCCESS)
@@ -419,8 +330,6 @@ void a2dp_source_start_streaming (wiced_bool_t bActivate, uint8_t avdt_handle,
         cy_asc_log_err(result, "failed to get recommended output buf sz.");
         return;
     }
-
-    printf("SBC encoder recommended_in_size: %lu, min_out_size:%lu \r\n",recommended_in_size, min_out_size);
 
     /*FORMULA as in A2DP Spec:
      *
@@ -451,26 +360,11 @@ void a2dp_source_start_streaming (wiced_bool_t bActivate, uint8_t avdt_handle,
     /*NumSubBands * NumBlocks * NumChannels* (bits_per_sample/2 )*/
     dwPCMBytesPerFrame = 2 * NumSubBands * NumBlocks * NumChannels;
 
-    WICED_BT_TRACE ("Stream Starting:  pcm_bytes_per_frame %u \n", dwPCMBytesPerFrame);
-
-    printf("Frame size is %u Frame per packet %lu \r\n",frame_size,frame_per_packet);
     /* Allocate memory */
     a2dp_frame = (uint8_t*)malloc(frame_size*frame_per_packet+1);
     encoder_output = (uint8_t*)malloc(min_out_size);
-
     Timestamp = 0;
     TimestampInc = ((NumBlocks * NumSubBands * FRAME_TIME_STAMP) / SampleRate) * frame_per_packet;
-    printf("Timestamp increment is %ld \r\n",TimestampInc);
-
-    printf("fr_per_1000sec %d \r\n",fr_per_1000sec);
-    printf("pkts_per_1000sec %d \r\n",pkts_per_1000sec);
-    printf("usTimeout %lld \r\n",usTimeout);
-
-
-
-
-    WICED_BT_TRACE ("Stream Parameters: Sample rate %d  Blk: %d   SB: %d  BitP: %d  uS: %d  Frame Size: %d  Frame Per Packet: %d  fp1000s: %u \n",\
-                    SampleRate, NumBlocks, NumSubBands, sbc_params.sbc_config.bit_pool, usTimeout, frame_size, frame_per_packet, fr_per_1000sec);
 
 
     result = xTaskCreate(a2dp_source_audio_thread, "Streaming task",A2DP_TASK_STACK_SIZE,NULL,A2DP_TASK_PRIORITY,&a2dp_task_handle);
@@ -478,7 +372,7 @@ void a2dp_source_start_streaming (wiced_bool_t bActivate, uint8_t avdt_handle,
 
     if (result != pdPASS)
     {
-        cy_asc_log_info("Error in starting Streaming task \n");
+        cy_asc_log_info("Error in starting Streaming task \r\n");
     }
 
 }
@@ -581,12 +475,10 @@ uint8_t a2dp_source_encode_sendSBC ()
 uint16_t a2dp_source_calculate_delay()
 {
     float bytes_per_pkt = 0;
-    float delay_in_micro_sec = 0;
+    float delay_in_micro_sec;
 
     bytes_per_pkt = frame_size * frame_per_packet;
     delay_in_micro_sec = ((bytes_per_pkt * 1000) / (SampleRate *2)) * 1000;
-    WICED_BT_TRACE (" Required delay is %d between pkts of size %d to achieve SampleRate %d",
-                    (uint16_t)delay_in_micro_sec, (uint16_t)bytes_per_pkt, SampleRate);
     return (uint16_t)delay_in_micro_sec;
 }
 
@@ -605,7 +497,6 @@ uint16_t a2dp_source_calculate_delay()
 void a2dp_source_audio_thread(void* arg)
 {
     cy_rslt_t result = 0;
-    uint16_t delay_in_micro_sec = 0;
 
     stream_buff_sem = xSemaphoreCreateBinary();
     if ( stream_buff_sem == NULL )
@@ -625,12 +516,6 @@ void a2dp_source_audio_thread(void* arg)
     gpio_btn_callback_data.callback = gpio_interrupt_handler;
     cyhal_gpio_register_callback(CYBSP_USER_BTN, &gpio_btn_callback_data);
     cyhal_gpio_enable_event(CYBSP_USER_BTN, CYHAL_GPIO_IRQ_FALL, GPIO_INTERRUPT_PRIORITY, true);
-
-    WICED_BT_TRACE("a2dp_src_thread usTimeout: %u \n", usTimeout);
-
-    delay_in_micro_sec = a2dp_source_calculate_delay() + delay_reported_from_sink_micro_sec;
-    printf("Delay in micro sec is %d \r\n",delay_in_micro_sec);
-    printf("portTICK_PERIOD_MS is %ld (float)(delay_in_micro_sec*0.001)/portTICK_PERIOD_MS is %f %f \r\n",portTICK_PERIOD_MS,(float)(delay_in_micro_sec*0.001)/portTICK_PERIOD_MS,(float)(delay_in_micro_sec*0.001)/portTICK_PERIOD_MS);
 
     printf("\r\nPress User Btn1 to play/pause the stream... \r\n");
     xSemaphoreGive(stream_buff_sem);
@@ -655,12 +540,10 @@ void a2dp_source_audio_thread(void* arg)
 
         if (A2DP_APP_FAILED == a2dp_source_encode_sendSBC())
         {
-            WICED_BT_TRACE("Encode and Send failed. \n");
+            printf("Encode and Send failed. \r\n");
         }
         vTaskDelay(TASK_DELAY_1MS);
     }
-
-    WICED_BT_TRACE("a2dp_src_thread() exit");
 }
 
 /* ****************************************************************************
@@ -680,15 +563,6 @@ static void a2dp_source_parse_sbc_params (wiced_bt_a2d_sbc_cie_t * pSbc, uint32_
 {
     switch (pSbc->samp_freq)
     {
-    case A2D_SBC_IE_SAMP_FREQ_16:
-        *pSf = AUDIO_SAMPLE_RATE_16kHz;
-        break;
-    case A2D_SBC_IE_SAMP_FREQ_32:
-        *pSf = AUDIO_SAMPLE_RATE_32kHz;
-        break;
-    case A2D_SBC_IE_SAMP_FREQ_44:
-        *pSf = AUDIO_SAMPLE_RATE_44_1kHz;
-        break;
     case A2D_SBC_IE_SAMP_FREQ_48:
         *pSf = AUDIO_SAMPLE_RATE_48kHz;
         break;
@@ -752,7 +626,6 @@ static void a2dp_source_parse_sbc_params (wiced_bt_a2d_sbc_cie_t * pSbc, uint32_
  * ***************************************************************************/
 static void a2dp_source_set_audio_streaming(uint8_t handle, wiced_bool_t start_audio)
 {
-    WICED_BT_TRACE("Setting Audio Stream State to %d \n", start_audio);
 
     if (start_audio)
     {
@@ -790,7 +663,7 @@ void  a2dp_source_control_cback (wiced_bt_a2dp_source_event_t event, wiced_bt_a2
     case WICED_BT_A2DP_SOURCE_CONNECT_EVT:
         if (NULL == p_data)
         {
-            WICED_BT_TRACE ("A2DP Source Control Callback with event data pointer NULL \n");
+            printf ("A2DP Source Control Callback with event data pointer NULL \r\n");
             return;
         }
         /**< Connected event, received on establishing connection to a peer device. Ready to stream. */
@@ -804,14 +677,11 @@ void  a2dp_source_control_cback (wiced_bt_a2dp_source_event_t event, wiced_bt_a2
             /* Maintain State */
             av_app_cb.state = AV_STATE_OPEN;
 
-            WICED_BT_TRACE ("Connected to addr: <%x> Handle %d \n\r",p_data->connect.bd_addr,
-                            p_data->connect.handle);
+            printf("Connected to addr: %x:%x:%x:%x:%x:%x\r\n",p_data->connect.bd_addr[0], p_data->connect.bd_addr[1], p_data->connect.bd_addr[2],p_data->connect.bd_addr[3],p_data->connect.bd_addr[4],p_data->connect.bd_addr[5]);
 
-            handle = p_data->connect.handle;
-#ifdef PSOC6_43012_BOARD
+            handle = p_data->connect.handle;         
             connection_status = A2DP_PEER_CONNECTED;
-#endif
-            printf("Connected to BT Speaker/Earbuds ... \r\n\r\n");
+            printf("Connected to BT Speaker/Earbuds ... \r\n");
             printf("Configuring A2DP stream to 48KHz, Stereo \r\n");
             a2dp_source_command_stream_config ((uint8_t)AUDIO_SF_48K, AUDIO_CHCFG_STEREO);
 
@@ -831,8 +701,6 @@ void  a2dp_source_control_cback (wiced_bt_a2dp_source_event_t event, wiced_bt_a2
         }
         else
         {
-            WICED_BT_TRACE (" a2dp source connection to <%x> failed %d \n", p_data->connect.bd_addr,
-                  p_data->connect.result);
             printf("Connection Failed to %x:%x:%x:%x:%x:%x. Reset the board. \r\n",p_data->connect.bd_addr[0], p_data->connect.bd_addr[1], p_data->connect.bd_addr[2],p_data->connect.bd_addr[3],p_data->connect.bd_addr[4],p_data->connect.bd_addr[5]);
         }
 
@@ -846,16 +714,14 @@ void  a2dp_source_control_cback (wiced_bt_a2dp_source_event_t event, wiced_bt_a2
         av_app_cb.state = AV_STATE_IDLE;
         a2dp_source_deinit_streaming();
         handle = 0; /* reset connection handle */
-        printf ("A2DP peer disconnected. Reset the board. \r\n");
-#ifdef PSOC6_43012_BOARD
         connection_status = A2DP_PEER_DISCONNECTED;
-#endif
+        printf ("A2DP peer disconnected. Reset the board. \r\n");
         break;
 
     case WICED_BT_A2DP_SOURCE_CONFIGURE_EVT:
         if (NULL == p_data)
         {
-            WICED_BT_TRACE ("A2DP Source Control Callback with event data pointer NULL \n");
+            printf("A2DP Source Control Callback with event data pointer NULL \r\n");
             return;
         }
         /* Maintain State */
@@ -869,7 +735,7 @@ void  a2dp_source_control_cback (wiced_bt_a2dp_source_event_t event, wiced_bt_a2
         printf("WICED_BT_A2DP_SOURCE_START_IND_EVT \r\n");
         if (NULL == p_data)
         {
-            WICED_BT_TRACE ("A2DP Source Control Callback with event data pointer NULL \n");
+            printf("A2DP Source Control Callback with event data pointer NULL \r\n");
             return;
         }
         if (!wiced_bt_a2dp_source_send_start_response (p_data->start_ind.handle,
@@ -879,16 +745,12 @@ void  a2dp_source_control_cback (wiced_bt_a2dp_source_event_t event, wiced_bt_a2
             printf("wiced_bt_a2dp_source_send_start_response no error !!!! \r\n");
             if (av_app_cb.state != AV_STATE_STARTED)
             {
-                WICED_BT_TRACE (" a2dp source streaming started handle:%d lcid %x \n",
-                  p_data->start_cfm.handle, av_app_cb.lcid);
-                printf("WICED_BT_A2DP_SOURCE_START_IND_EVT start streaming \r\n");
-
                 a2dp_source_set_audio_streaming (p_data->start_ind.handle, WICED_TRUE);
                 av_app_cb.state = AV_STATE_STARTED;
             }
             else
             {
-                WICED_BT_TRACE (" a2dp source streaming already started \n");
+                printf(" a2dp source streaming already started \r\n");
             }
         }
         break;
@@ -896,25 +758,23 @@ void  a2dp_source_control_cback (wiced_bt_a2dp_source_event_t event, wiced_bt_a2
     case WICED_BT_A2DP_SOURCE_START_CFM_EVT:
         if (NULL == p_data)
         {
-            WICED_BT_TRACE ("A2DP Source Control Callback with event data pointer NULL \n");
+            printf("A2DP Source Control Callback with event data pointer NULL \r\n");
             return;
         }
         /*Start stream event, received when audio streaming is about to start*/
         if (p_data->start_cfm.result != WICED_SUCCESS)
         {
-            WICED_BT_TRACE ("Stream start Error \n");
+            printf("Stream start Error \r\n");
             break;
         }
         if (av_app_cb.state != AV_STATE_STARTED)
         {
-            WICED_BT_TRACE (" a2dp source streaming started handle:%d lcid %x \n",
-              p_data->start_cfm.handle, av_app_cb.lcid);
             a2dp_source_set_audio_streaming (p_data->start_cfm.handle, WICED_TRUE);
             av_app_cb.state = AV_STATE_STARTED;
         }
         else
         {
-            WICED_BT_TRACE (" a2dp source streaming already started \n");
+            printf(" a2dp source streaming already started \r\n");
         }
         break;
 
@@ -922,7 +782,7 @@ void  a2dp_source_control_cback (wiced_bt_a2dp_source_event_t event, wiced_bt_a2
         /**< Suspend stream event, received when audio streaming is suspended */
         /* Maintain State */
         av_app_cb.state = AV_STATE_OPEN;
-        WICED_BT_TRACE (" a2dp source streaming suspended \n");
+        printf(" a2dp source streaming suspended \r\n");
         a2dp_source_set_audio_streaming (p_data->suspend.handle, WICED_FALSE);
         break;
 
@@ -935,16 +795,13 @@ void  a2dp_source_control_cback (wiced_bt_a2dp_source_event_t event, wiced_bt_a2
     case WICED_BT_A2DP_SOURCE_DELAY_RPT_EVT:
         if (NULL == p_data)
         {
-            WICED_BT_TRACE ("A2DP Source Control Callback with event data pointer NULL \n");
+            printf("A2DP Source Control Callback with event data pointer NULL \r\n");
             return;
         }
-        WICED_BT_TRACE ("a2dp source WICED_BT_A2DP_SOURCE_DELAY_RPT_EVT delay is %d\n",
-              p_data->delay_ms);
         a2dp_source_update_sink_rep_delay (p_data->delay_ms);
         break;
 
     default:
-        WICED_BT_TRACE ("a2dp source Unhandled Event %d\n", event);
         break;
     }
 }
@@ -967,26 +824,31 @@ void  a2dp_source_control_cback (wiced_bt_a2dp_source_event_t event, wiced_bt_a2
  * ***************************************************************************/
 void a2dp_source_bt_inquiry_result_cback( wiced_bt_dev_inquiry_scan_result_t *p_inquiry_result, uint8_t *p_eir_data )
 {
-    uint8_t   len; /* length of EIR data */
-
+    uint8_t len;
     if (p_inquiry_result == NULL)
     {
-        WICED_BT_TRACE( "Inquiry complete \n");
+        printf( "\r\n\r\nInquiry completed \r\n");
+        a2dp_source_bt_inquiry (0);
+        initiate_bt_device_connection = true;
     }
     else
     {
-        WICED_BT_TRACE( "Inquiry result: ");
+        printf("\r\n\r\nInquiry result:\r\n");
+        printf(" Bluetooth Device Address of the Speaker/Earbuds :");
         print_bd_address (p_inquiry_result->remote_bd_addr );
-        WICED_BT_TRACE_ARRAY((uint8_t*)(p_inquiry_result->dev_class), 3, "COD :" );
-        WICED_BT_TRACE( "RSSI: ", p_inquiry_result->rssi );
+        printf(" COD : %.2x%.2x%.2x \r\n", p_inquiry_result->dev_class[0], p_inquiry_result->dev_class[1], p_inquiry_result->dev_class[2]);
+    }
 
-        /* currently callback does not pass the data of the adv data,
-         * need to go through the data
-         * zero len in the LTV means that there is no more data
-         */
-        if (( p_eir_data != NULL ) && ( len = *p_eir_data ) != 0)
+    /* currently callback does not pass the data of the adv data,
+    * need to go through the data
+    * zero len in the LTV means that there is no more data
+    */
+    if (( p_eir_data != NULL ) && ( len = *p_eir_data ) != 0)
+    {
+        printf(" Device Name : ");
+        for(int i=0; i<len; i++)
         {
-            WICED_BT_TRACE_ARRAY( ( uint8_t* )( p_eir_data ), len, "EIR :" );
+            printf("%c", p_eir_data[i]);
         }
     }
 }
@@ -1022,12 +884,13 @@ wiced_result_t a2dp_source_bt_inquiry( uint8_t enable )
         {
             result = WICED_BT_SUCCESS;
         }
-        WICED_BT_TRACE( "Inquiry started:%d\n", result );
+        printf( "\r\nInquiry started:%d \r\n", result );
+        printf( "Scanning for the Bluetooth Speaker/Earbuds \r\n");
     }
     else
     {
         result = wiced_bt_cancel_inquiry( );
-        WICED_BT_TRACE( "Cancel inquiry:%d\n", result );
+        printf( "Cancel inquiry:%d \r\n\r\n", result );
     }
     return result;
 }
@@ -1052,13 +915,13 @@ wiced_result_t a2dp_source_bt_set_visibility( uint8_t discoverability, uint8_t c
 
     if ((discoverability > 1) || (connectability > 1))
     {
-        WICED_BT_TRACE( "Invalid Input \n");
+        printf( "Invalid Input \r\n");
         status = WICED_BT_ERROR;
     }
     else if ((discoverability != 0) && (connectability == 0))
     {
         /* we cannot be discoverable and not connectable */
-        WICED_BT_TRACE("we cannot be discoverable and not connectable \n");
+        printf("we cannot be discoverable and not connectable \r\n");
         status = WICED_BT_ERROR;
     }
     else
@@ -1090,7 +953,6 @@ wiced_result_t a2dp_source_bt_set_visibility( uint8_t discoverability, uint8_t c
 void a2dp_source_bt_set_pairability( uint8_t pairing_allowed )
 {
     wiced_bt_set_pairable_mode(pairing_allowed, TRUE);
-    WICED_BT_TRACE( "Set the pairing allowed to %d \n", pairing_allowed );
 }
 
 /* ****************************************************************************
@@ -1111,7 +973,7 @@ void a2dp_source_bt_print_local_bda( void )
     wiced_bt_device_address_t bda = { 0 };
 
     wiced_bt_dev_read_local_addr(bda);
-    WICED_BT_TRACE( "Local Bluetooth Device Address:");
+    printf( "Local Bluetooth Device Address:");
     print_bd_address (bda);
 }
 
@@ -1135,12 +997,11 @@ wiced_result_t a2dp_source_command_connect(wiced_bt_device_address_t bd_addr, ui
 
     if (handle > 0)
     {
-        WICED_BT_TRACE("Already Connected \n\r");
+        printf("Already Connected \r\n\r");
         status = WICED_BT_ERROR;
     }
     else
     {
-        WICED_BT_TRACE("Connecting to [%x] \n\r", bd_addr );
         status = wiced_bt_a2dp_source_connect(bd_addr);
     }
     return status;
@@ -1163,7 +1024,7 @@ wiced_result_t a2dp_source_command_disconnect()
 {
     wiced_result_t status = WICED_BT_SUCCESS;
 
-    WICED_BT_TRACE( "Disconnecting Connection with Handle %d\n\r", handle );
+    printf( "Disconnecting Connection with Handle %d \r\n", handle );
     if (handle == 0)
     {
         status = WICED_BT_ERROR;
@@ -1232,8 +1093,6 @@ void a2dp_source_command_stream_config(uint8_t sf, uint8_t chcfg)
         bt_audio_config.default_codec_config.cie.sbc.samp_freq = sf;
         bt_audio_config.default_codec_config.cie.sbc.ch_mode = chcfg;
     }
-    WICED_BT_TRACE( "Handle %d sf:%s chcfg:%s\n\r", handle,
-                    get_audio_freq_name (sf), get_audio_chcfg_name (chcfg) );
 }
 
 /* ****************************************************************************
@@ -1251,8 +1110,6 @@ void a2dp_source_command_stream_config(uint8_t sf, uint8_t chcfg)
  * ***************************************************************************/
 wiced_result_t a2dp_source_command_stream_start()
 {
-    WICED_BT_TRACE( "Stream Start for Connection Handle %d\n\r", handle);
-
     if (handle == 0)
     {
        return WICED_BT_ERROR;
@@ -1275,8 +1132,6 @@ wiced_result_t a2dp_source_command_stream_start()
  * ***************************************************************************/
 wiced_result_t a2dp_source_command_stream_stop()
 {
-    WICED_BT_TRACE( "Stream Stop for Connection Handle %d\n\r", handle);
-
     if (handle == 0)
     {
         return WICED_BT_ERROR;
@@ -1312,16 +1167,12 @@ void a2dp_source_write_eir( void )
 
     if (!pBuf)
     {
-        WICED_BT_TRACE ("Buffer allocation for EIR Data failed \n");
+        printf("Buffer allocation for EIR Data failed \r\n");
         return;
     }
-
-    WICED_BT_TRACE ("EIR allocated Buffer: %x\n", pBuf);
+    
     p = pBuf;
-
     length = (uint8_t) strlen ((char*) a2dp_source_cfg_settings.device_name);
-
-    WICED_BT_TRACE ("length %d\n", (uint8_t)length);
     UINT8_TO_STREAM (p, length + 1);
     UINT8_TO_STREAM (p, BT_EIR_COMPLETE_LOCAL_NAME_TYPE);
     memcpy (p, a2dp_source_cfg_settings.device_name, length);
@@ -1340,77 +1191,10 @@ void a2dp_source_write_eir( void )
     /* Last Tag */
     UINT8_TO_STREAM (p, 0x00);
 
-    /* print EIR data */
-    WICED_BT_TRACE_ARRAY( ( uint8_t* )( pBuf+1 ), MIN( p-( uint8_t* )pBuf,100 ), "EIR :" );
     wiced_bt_dev_write_eir( pBuf, (uint16_t)(p - pBuf) );
 
     /* Allocated buffer not anymore needed. Free it */
     wiced_bt_free_buffer (pBuf);
-}
-
-/******************************************************************************
- * Function Name: a2dp_source_write_nvram
- *******************************************************************************
- * Summary:
- *          Write NVRAM function is called to store information but in PSoC6 it will not be stored.
- *
- * Parameters:
- *          nvram_id: NVRAM Id
- *          data_len: Length of the data to be written
- *          p_data: Data to be written
- *
- * Return:
- *          Number of bytes written
- *
- *****************************************************************************/
-uint16_t a2dp_source_write_nvram( int nvram_id, int data_len, void *p_data)
-{
-    uint16_t        bytes_written = 0;
-    int i=0;
-
-    if (p_data != NULL)
-    {
-        bytes_written=data_len;
-        memcpy(&nv_key_ram,p_data,sizeof(wiced_bt_device_link_keys_t));
-        printf("Link Key is ");
-        for (i=0; i<LINK_KEY_LEN; i++) {
-            printf("%x ",nv_key_ram.key_data.br_edr_key[i]);
-        }
-        printf("\r\n");
-
-        WICED_BT_TRACE("NVRAM ID:%d written :%d bytes \n", nvram_id, bytes_written);
-    }
-
-    return (bytes_written);
-}
-
-
-/******************************************************************************
- * Function Name: a2dp_source_read_nvram
- *******************************************************************************
- * Summary:
- *          Read data from the NVRAM and return in the passed buffer
- *
- * Parameters:
- *          nvram_id: NVRAM Id
- *          data_len: Length of the data to be read
- *          p_data: Data buffer pointer to hold read data
- *
- * Return:
- *          Number of bytes read
- *
- *****************************************************************************/
-uint16_t a2dp_source_read_nvram( int nvram_id, void *p_data, int data_len)
-{
-    uint16_t        read_bytes = 0;
-
-    if ((p_data != NULL) && (data_len >= sizeof(wiced_bt_device_link_keys_t)))
-    {
-        memset(&nv_key_ram,0xFF,sizeof(wiced_bt_device_link_keys_t));
-        WICED_BT_TRACE("NVRAM ID:%d read out of %d bytes:%d \n", nvram_id,
-                       sizeof(wiced_bt_device_link_keys_t), read_bytes );
-    }
-    return (read_bytes);
 }
 
 /******************************************************************************
@@ -1439,12 +1223,12 @@ void a2dp_source_app_init( void )
                                         a2dp_source_control_cback, p_default_heap);
     if (result == WICED_BT_SUCCESS)
     {
-        WICED_BT_TRACE( "A2DP Source initialized \n\r");
+        printf( "A2DP Source initialized \r\n");
 
     }
     else
     {
-        WICED_BT_TRACE( "A2DP Source initialization failed \n\r");
+        printf( "A2DP Source initialization failed \r\n");
     }
 }
 
@@ -1473,12 +1257,9 @@ wiced_result_t a2dp_source_management_callback( wiced_bt_management_evt_t event,
     wiced_result_t                      result = WICED_BT_SUCCESS;
 
     wiced_bt_power_mgmt_notification_t *p_power_mgmt_notification;
-    wiced_bt_dev_encryption_status_t   *p_encryption_status;
     wiced_bt_dev_pairing_cplt_t        *p_pairing_cmpl;
-    int                                 pairing_result;
-    wiced_bt_device_address_t           bda_str;
-
-    WICED_BT_TRACE("A2dp source management callback: %s\n", get_bt_event_name(event));
+    /* Return status for EEPROM. */
+    cy_en_em_eeprom_status_t eeprom_return_value;
 
     switch( event )
     {
@@ -1486,19 +1267,18 @@ wiced_result_t a2dp_source_management_callback( wiced_bt_management_evt_t event,
     case BTM_ENABLED_EVT:
         if (p_event_data == NULL)
         {
-            WICED_BT_TRACE("Callback data pointer p_event_data is NULL \n");
+            printf("Callback data pointer p_event_data is NULL \r\n");
             break;
         }
         if (WICED_BT_SUCCESS == p_event_data->enabled.status)
         {
             /* Bluetooth is enabled */
             wiced_bt_dev_read_local_addr(bda);
-            WICED_BT_TRACE("Bluetooth Enabled \n");
-            WICED_BT_TRACE("Local Bluetooth Address: ");
+            printf("Local Bluetooth Device Address of PSoC6 is");
             print_bd_address(bda);
 
             /* Set Discoverable */
-            a2dp_source_bt_set_visibility (WICED_FALSE, WICED_TRUE);
+            a2dp_source_bt_set_visibility (WICED_TRUE, WICED_TRUE);
 
             /* Enable pairing */
             wiced_bt_set_pairable_mode(WICED_TRUE, 0);
@@ -1509,58 +1289,53 @@ wiced_result_t a2dp_source_management_callback( wiced_bt_management_evt_t event,
             wiced_bt_sdp_db_init((uint8_t*) a2dp_source_sdp_db,
                 sizeof(a2dp_source_sdp_db));
 
-           /* start the a2dp application */
-           a2dp_source_app_init();
+            /* start the a2dp application */
+            a2dp_source_app_init();
+            
+            /* Set pairable */
+            a2dp_source_bt_set_pairability(1);
 
-           a2dp_source_bt_set_pairability(1);
-           /* If Inquiry is required enable the a2dp_source_bt_inquiry API. */
-           /* a2dp_source_bt_inquiry (1); */
-           a2dp_source_bt_set_visibility (WICED_TRUE, WICED_TRUE);
-           printf("Connecting to BT Speaker/Earbuds...\r\n");
-
-           bda_str[0] = (uint8_t)BDA_ADDRESS_BYTE_0;
-           bda_str[1] = (uint8_t)BDA_ADDRESS_BYTE_1;
-           bda_str[2] = (uint8_t)BDA_ADDRESS_BYTE_2;
-           bda_str[3] = (uint8_t)BDA_ADDRESS_BYTE_3;
-           bda_str[4] = (uint8_t)BDA_ADDRESS_BYTE_4;
-           bda_str[5] = (uint8_t)BDA_ADDRESS_BYTE_5;
-
-           printf("Bluetooth Device Address of Speaker/Earbuds is %x:%x:%x:%x:%x:%x \r\n",bda_str[0], bda_str[1], bda_str[2],bda_str[3],bda_str[4],bda_str[5]);
-
-           printf("Skip Bonding Request \r\n");
-           /* If the below API is enabled, then a2dp_source_command_connect should be called inside BTM_PAIRING_COMPLETE_EVT */
-           /* wiced_bt_dev_sec_bond (bda_str,BLE_ADDR_PUBLIC,BT_TRANSPORT_BR_EDR,0, NULL); */
-
-           a2dp_source_command_connect (bda_str, BD_ADDR_LEN);
-           printf("Connection Request sent. Waiting to connect with the BT Speaker/Earbuds ....\r\n");
-
-        } else
+            if(skip_bt_scan)
+            {
+              /* Skipped the BT device scan */
+              skip_bt_scan = false;
+              /* Initiate the BT device connection */
+              /* Send the A2DP source command connect */
+              initiate_bt_device_connection = true;
+            }
+            else
+            {
+              /* Starting the BT device (Speaker/Headphones) scanning */
+              /* Starting the BT inquiry */
+              a2dp_source_bt_inquiry (1);
+            }
+        } 
+        else
         {
-            WICED_BT_TRACE("Bluetooth Enable failed \n");
+            printf("Bluetooth Enable failed \r\n");
         }
         break;
 
     case BTM_DISABLED_EVT:
-            WICED_BT_TRACE("Bluetooth Disabled \n");
+            printf("Bluetooth Disabled \r\n");
         break;
 
     case BTM_SECURITY_FAILED_EVT:
         if (p_event_data == NULL)
         {
-            WICED_BT_TRACE("Callback data pointer p_event_data is NULL \n");
+            printf("Callback data pointer p_event_data is NULL \r\n");
             break;
         }
-        WICED_BT_TRACE("Security failed: %d / %d\n", p_event_data->security_failed.status,
+        printf("Security failed: %d / %d \r\n", p_event_data->security_failed.status,
                                                        p_event_data->security_failed.hci_status);
         break;
 
     case BTM_PIN_REQUEST_EVT:
         if (p_event_data == NULL)
         {
-            WICED_BT_TRACE("Callback data pointer p_event_data is NULL \n");
+            printf("Callback data pointer p_event_data is NULL \r\n");
             break;
         }
-        WICED_BT_TRACE("remote address= %x\n", p_event_data->pin_request.bd_addr);
         wiced_bt_dev_pin_code_reply(*p_event_data->pin_request.bd_addr, WICED_BT_SUCCESS,
                                                         WICED_PIN_CODE_LEN, (uint8_t *)&pincode[0]);
         break;
@@ -1568,25 +1343,23 @@ wiced_result_t a2dp_source_management_callback( wiced_bt_management_evt_t event,
     case BTM_USER_CONFIRMATION_REQUEST_EVT:
         if (p_event_data == NULL)
         {
-            WICED_BT_TRACE("Callback data pointer p_event_data is NULL \n");
+            printf("Callback data pointer p_event_data is NULL \r\n");
             break;
         }
         /* If this is just works pairing, accept.
          * Otherwise send event to the MCU to confirm the same value.
          */
-        WICED_BT_TRACE("User Confirmation. BDA %x, Key %d \n", p_event_data->user_confirmation_request.bd_addr,
-                                                   p_event_data->user_confirmation_request.numeric_value);
         wiced_bt_dev_confirm_req_reply( WICED_BT_SUCCESS, p_event_data->user_confirmation_request.bd_addr );
         break;
 
     case BTM_PASSKEY_NOTIFICATION_EVT:
         if (p_event_data == NULL)
         {
-            WICED_BT_TRACE("Callback data pointer p_event_data is NULL \n");
+            printf("Callback data pointer p_event_data is NULL \r\n");
             break;
         }
-        WICED_BT_TRACE("PassKey Notification. BDA %x, Key %d \n",
-                                   p_event_data->user_passkey_notification.bd_addr,
+        printf("PassKey Notification. BDA %x:%x:%x:%x:%x:%x, Key %ld \r\n",
+                                   p_event_data->user_passkey_notification.bd_addr[0],p_event_data->user_passkey_notification.bd_addr[1],p_event_data->user_passkey_notification.bd_addr[2],p_event_data->user_passkey_notification.bd_addr[3],p_event_data->user_passkey_notification.bd_addr[4],p_event_data->user_passkey_notification.bd_addr[5],
                                    p_event_data->user_passkey_notification.passkey);
         wiced_bt_dev_confirm_req_reply( WICED_BT_SUCCESS, p_event_data->user_passkey_notification.bd_addr );
         break;
@@ -1594,12 +1367,10 @@ wiced_result_t a2dp_source_management_callback( wiced_bt_management_evt_t event,
     case BTM_PAIRING_IO_CAPABILITIES_BR_EDR_REQUEST_EVT:
         if (p_event_data == NULL)
         {
-            WICED_BT_TRACE("Callback data pointer p_event_data is NULL \n");
+            printf("Callback data pointer p_event_data is NULL \r\n");
             break;
         }
         /* Use the default security for BR/EDR*/
-        WICED_BT_TRACE("BTM_PAIRING_IO_CAPABILITIES_BR_EDR_REQUEST_EVT bda %x\n",
-                       p_event_data->pairing_io_capabilities_br_edr_request.bd_addr);
         p_event_data->pairing_io_capabilities_br_edr_request.local_io_cap =
                                                         BTM_IO_CAPABILITIES_DISPLAY_AND_YES_NO_INPUT;
         p_event_data->pairing_io_capabilities_br_edr_request.auth_req =
@@ -1612,12 +1383,9 @@ wiced_result_t a2dp_source_management_callback( wiced_bt_management_evt_t event,
     case BTM_PAIRING_IO_CAPABILITIES_BLE_REQUEST_EVT:
         if (p_event_data == NULL)
         {
-            WICED_BT_TRACE("Callback data pointer p_event_data is NULL \n");
+            printf("Callback data pointer p_event_data is NULL \r\n");
             break;
         }
-        /* Use the default security for BLE */
-        WICED_BT_TRACE("BTM_PAIRING_IO_CAPABILITIES_BLE_REQUEST_EVT bda %x\n",
-                p_event_data->pairing_io_capabilities_ble_request.bd_addr);
         p_event_data->pairing_io_capabilities_ble_request.local_io_cap  =
                                                     BTM_IO_CAPABILITIES_DISPLAY_AND_YES_NO_INPUT;
         p_event_data->pairing_io_capabilities_ble_request.oob_data = BTM_OOB_NONE;
@@ -1633,154 +1401,118 @@ wiced_result_t a2dp_source_management_callback( wiced_bt_management_evt_t event,
     case BTM_PAIRING_COMPLETE_EVT:
         if (p_event_data == NULL)
         {
-            WICED_BT_TRACE("Callback data pointer p_event_data is NULL \n");
+            printf("Callback data pointer p_event_data is NULL \r\n");
             break;
         }
         p_pairing_cmpl = &p_event_data->pairing_complete;
-        if(p_pairing_cmpl->transport == BT_TRANSPORT_BR_EDR)
+
+        /* Use the default security for BLE */
+        printf("Paired peer device address %x:%x:%x:%x:%x:%x \r\n",
+                p_pairing_cmpl->bd_addr[0],p_pairing_cmpl->bd_addr[1],p_pairing_cmpl->bd_addr[2],p_pairing_cmpl->bd_addr[3],p_pairing_cmpl->bd_addr[4],p_pairing_cmpl->bd_addr[5]);
+
+        memcpy(&eeprom_write_array, p_pairing_cmpl->bd_addr, LOGICAL_EEPROM_SIZE);
+
+        /* Write the paired bluetooth device address to EEPROM. */
+        eeprom_return_value = Cy_Em_EEPROM_Write(LOGICAL_EEPROM_START,
+                                               eeprom_write_array,
+                                               LOGICAL_EEPROM_SIZE,
+                                               &Em_EEPROM_context);
+
+        if (CY_EM_EEPROM_SUCCESS != eeprom_return_value)
         {
-            pairing_result = p_pairing_cmpl->pairing_complete_info.br_edr.status;
+            printf("Error: Failed to write the paired bluetooth device address to EEPROM \r\n");
+		    CY_ASSERT(0);
         }
-        else
-        {
-            pairing_result = p_pairing_cmpl->pairing_complete_info.ble.reason;
-        }
-        WICED_BT_TRACE( "Pairing Result: %d\n", pairing_result );
-
-
-        bda_str[0] = (uint8_t)BDA_ADDRESS_BYTE_0;
-        bda_str[1] = (uint8_t)BDA_ADDRESS_BYTE_1;
-        bda_str[2] = (uint8_t)BDA_ADDRESS_BYTE_2;
-        bda_str[3] = (uint8_t)BDA_ADDRESS_BYTE_3;
-        bda_str[4] = (uint8_t)BDA_ADDRESS_BYTE_4;
-        bda_str[5] = (uint8_t)BDA_ADDRESS_BYTE_5;
-
-        // Enable here if bonding request API is called so that connection happens after pairing.
-        //a2dp_source_command_connect (bda_str, BD_ADDR_LEN);
         break;
 
     case BTM_ENCRYPTION_STATUS_EVT:
         if (p_event_data == NULL)
         {
-            WICED_BT_TRACE("Callback data pointer p_event_data is NULL \n");
+            printf("Callback data pointer p_event_data is NULL \r\n");
             break;
         }
-        p_encryption_status = &p_event_data->encryption_status;
-        WICED_BT_TRACE( "Encryption Status:(%x) res:%d\n", p_encryption_status->bd_addr,
-                                                           p_encryption_status->result );
         break;
 
     case BTM_SECURITY_REQUEST_EVT:
         if (p_event_data == NULL)
         {
-            WICED_BT_TRACE("Callback data pointer p_event_data is NULL \n");
+            printf("Callback data pointer p_event_data is NULL \r\n");
             break;
         }
-        WICED_BT_TRACE( "Security Request Event \n");
+        printf( "Security Request Event \r\n");
         wiced_bt_ble_security_grant( p_event_data->security_request.bd_addr, WICED_BT_SUCCESS );
         break;
 
     case BTM_PAIRED_DEVICE_LINK_KEYS_UPDATE_EVT:
         if (p_event_data == NULL)
         {
-            WICED_BT_TRACE("Callback data pointer p_event_data is NULL \n");
             break;
         }
-        WICED_BT_TRACE("BTM_PAIRED_DEVICE_LINK_KEYS_UPDATE_EVT - dev: [%x]  Len:%d\n",
-                             p_event_data->paired_device_link_keys_update.bd_addr,
-                             sizeof(wiced_bt_device_link_keys_t));
-
-        /* This application supports a single paired host, we can save keys
-         * under the same NVRAM ID overwriting previous pairing if any */
-        a2dp_source_write_nvram(A2DP_SOURCE_NVRAM_ID,
-                sizeof(wiced_bt_device_link_keys_t), &p_event_data->paired_device_link_keys_update);
-
-         break;
+        result = WICED_BT_ERROR;
+        break;
 
     case BTM_PAIRED_DEVICE_LINK_KEYS_REQUEST_EVT:
         if (p_event_data == NULL)
         {
-            WICED_BT_TRACE("Callback data pointer p_event_data is NULL \n");
             break;
         }
-        WICED_BT_TRACE("BTM_PAIRED_DEVICE_LINK_KEYS_REQUEST_EVT - dev: [%x]  Len:%d \r\n",
-                            p_event_data->paired_device_link_keys_request.bd_addr,
-                            sizeof(wiced_bt_device_link_keys_t));
-        printf("\r\nLink key request - %x:%x:%x:%x:%x:%x\r\n",p_event_data->paired_device_link_keys_request.bd_addr[0], p_event_data->paired_device_link_keys_request.bd_addr[1], p_event_data->paired_device_link_keys_request.bd_addr[2],p_event_data->paired_device_link_keys_request.bd_addr[3],p_event_data->paired_device_link_keys_request.bd_addr[4],p_event_data->paired_device_link_keys_request.bd_addr[5]);
-
-        /* read existing key from the NVRAM  */
-        if (a2dp_source_read_nvram (A2DP_SOURCE_NVRAM_ID,
-                  &p_event_data->paired_device_link_keys_request,
-                  sizeof(wiced_bt_device_link_keys_t)) != 0)
-        {
-            result = WICED_BT_SUCCESS;
-        }
-        else
-        {
-            result = WICED_BT_ERROR;
-            WICED_BT_TRACE ("Key retrieval failure\n");
-        }
+        result = WICED_BT_ERROR;
         break;
 
     case BTM_LOCAL_IDENTITY_KEYS_UPDATE_EVT:
         if (p_event_data == NULL)
         {
-            WICED_BT_TRACE("Callback data pointer p_event_data is NULL \n");
+            printf("Callback data pointer p_event_data is NULL \r\n");
             break;
         }
-        /* save keys to NVRAM */
-        //p_keys = (uint8_t*) &p_event_data->local_identity_keys_update;
-        WICED_BT_TRACE("  result: %d \n", result);
+        printf("  result: %d \r\n", result);
         break;
 
     case BTM_LOCAL_IDENTITY_KEYS_REQUEST_EVT:
         if (p_event_data == NULL)
         {
-            WICED_BT_TRACE("Callback data pointer p_event_data is NULL \n");
+            printf("Callback data pointer p_event_data is NULL \r\n");
             break;
         }
-        /* read keys from NVRAM */
-        //p_keys = (uint8_t*) &p_event_data->local_identity_keys_request;
         break;
 
     case BTM_POWER_MANAGEMENT_STATUS_EVT:
         if (p_event_data == NULL)
         {
-            WICED_BT_TRACE("Callback data pointer p_event_data is NULL \n");
+            printf("Callback data pointer p_event_data is NULL \r\n");
             break;
         }
         p_power_mgmt_notification = &p_event_data->power_mgmt_notification;
-        WICED_BT_TRACE( "Power mgmt status event: bd ( %x ) status:%d hci_status:%d\n",
-                        p_power_mgmt_notification->bd_addr, p_power_mgmt_notification->status,
-                        p_power_mgmt_notification->hci_status);
+        printf( "Power mgmt status event: bd (%x %x %x %x %x %x) status:%d hci_status:%d \r\n",
+                        p_power_mgmt_notification->bd_addr[0],p_power_mgmt_notification->bd_addr[1],p_power_mgmt_notification->bd_addr[2],p_power_mgmt_notification->bd_addr[3],p_power_mgmt_notification->bd_addr[4],p_power_mgmt_notification->bd_addr[5],
+                        p_power_mgmt_notification->status,p_power_mgmt_notification->hci_status);        
         break;
 
     case BTM_BLE_ADVERT_STATE_CHANGED_EVT:
         if (p_event_data == NULL)
         {
-            WICED_BT_TRACE("Callback data pointer p_event_data is NULL \n");
+            printf("Callback data pointer p_event_data is NULL \r\n");
             break;
         }
         p_mode = &p_event_data->ble_advert_state_changed;
-        WICED_BT_TRACE( "Advertisement State Change: %d\n", *p_mode);
+        printf( "Advertisement State Change: %d \r\n", *p_mode);
         break;
 
     case BTM_BLE_CONNECTION_PARAM_UPDATE:
         if (p_event_data == NULL)
         {
-            WICED_BT_TRACE("Callback data pointer p_event_data is NULL \n");
+            printf("Callback data pointer p_event_data is NULL \r\n");
             break;
         }
         /* Connection parameters updated */
         if (WICED_SUCCESS == p_event_data->ble_connection_param_update.status)
         {
-            WICED_BT_TRACE("Supervision Time Out = %d\n",
+            printf("Supervision Time Out = %d \r\n",
                     (p_event_data->ble_connection_param_update.supervision_timeout * 10));
         }
         break;
 
     default:
-        WICED_BT_TRACE("Unhandled Bluetooth Management Event: 0x%x %s\n", event, get_bt_event_name(event));
         break;
     }
     return result;
@@ -1804,7 +1536,8 @@ static void gpio_interrupt_handler(void *handler_arg, cyhal_gpio_event_t event)
     if (bStreamingActive == WICED_FALSE)
     {
         bStreamingActive = WICED_TRUE;
-    } else if (bStreamingActive == WICED_TRUE)
+    } 
+    else if (bStreamingActive == WICED_TRUE)
     {
         bStreamingActive = WICED_FALSE;
     }
